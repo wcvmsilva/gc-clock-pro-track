@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Relatórios Detalhados</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+        
+        .filters-section {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .chart-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .chart-title {
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .chart-options {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .chart-body {
+            flex: 1;
+            position: relative;
+        }
+        
+        .report-table {
+            overflow-x: auto;
+        }
+        
+        .tab-container {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-gold);
+            color: var(--primary-dark);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .alert-card {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid var(--warning-color);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .alert-icon {
+            color: var(--warning-color);
+            font-size: 1.5rem;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            margin: 0 0 var(--spacing-xs);
+        }
+        
+        .alert-message {
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">Admin Demo</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Relatórios Detalhados</h1>
+            <div class="export-buttons">
+                <button class="btn btn-outline" onclick="exportReport('excel')">
+                    <span>Exportar Excel</span>
+                </button>
+                <button class="btn btn-primary" onclick="exportReport('pdf')">
+                    <span>Exportar PDF</span>
+                </button>
+            </div>
+        </div>
+        
+        <section class="filters-section">
+            <div class="card">
+                <h2 class="card-title">Filtros</h2>
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label class="form-label">Período</label>
+                        <select class="form-input" id="period-filter" onchange="updateReports()">
+                            <option value="daily">Diário</option>
+                            <option value="weekly" selected>Semanal</option>
+                            <option value="monthly">Mensal</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" class="form-input" id="start-date" value="2025-05-17" onchange="updateReports()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" class="form-input" id="end-date" value="2025-05-23" onchange="updateReports()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Funcionário</label>
+                        <select class="form-input" id="employee-filter" onchange="updateReports()">
+                            <option value="all">Todos</option>
+                            <option value="1">John Employee</option>
+                            <option value="2">Sarah Johnson</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Projeto</label>
+                        <select class="form-input" id="project-filter" onchange="updateReports()">
+                            <option value="all">Todos</option>
+                            <option value="1">Reforma Residencial</option>
+                            <option value="2">Instalação Solar</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Localização</label>
+                        <select class="form-input" id="location-filter" onchange="updateReports()">
+                            <option value="all">Todas</option>
+                            <option value="columbia">Columbia, SC</option>
+                            <option value="charleston">Charleston, SC</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="applyFilters()">Aplicar Filtros</button>
+            </div>
+        </section>
+        
+        <div class="report-stats">
+            <div class="card bg-primary">
+                <h3 class="card-title" style="color: white; border-color: var(--primary-gold);">Total de Horas</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0; color: white;">40h</p>
+            </div>
+            
+            <div class="card bg-gold">
+                <h3 class="card-title" style="color: var(--primary-dark); border-color: var(--primary-dark);">Custo Total</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0; color: var(--primary-dark);">R$ 1.600,00</p>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Média Diária</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0;">8h</p>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('hours-tab')">Horas Trabalhadas</div>
+                <div class="tab" onclick="switchTab('productivity-tab')">Produtividade</div>
+                <div class="tab" onclick="switchTab('cost-tab')">Distribuição de Custos</div>
+                <div class="tab" onclick="switchTab('trends-tab')">Tendências</div>
+                <div class="tab" onclick="switchTab('alerts-tab')">Alertas</div>
+            </div>
+            
+            <div id="hours-tab" class="tab-content active">
+                <div class="chart-container">
+                    <div class="card chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Horas Trabalhadas por Dia</h3>
+                            <div class="chart-options">
+                                <select class="form-input" onchange="updateHoursChart(this.value)">
+                                    <option value="day">Por Dia</option>
+                                    <option value="employee">Por Funcionário</option>
+                                    <option value="project">Por Projeto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="hoursChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-table">
+                    <div class="card">
+                        <h3 class="card-title">Registros Detalhados</h3>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Funcionário</th>
+                                    <th>Data</th>
+                                    <th>Entrada</th>
+                                    <th>Saída</th>
+                                    <th>Horas</th>
+                                    <th>Projeto</th>
+                                    <th>Localização</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>John Employee</td>
+                                    <td>23/05/2025</td>
+                                    <td>08:00</td>
+                                    <td>12:00</td>
+                                    <td>4h</td>
+                                    <td>Reforma Residencial</td>
+                                    <td>Columbia, SC</td>
+                                    <td>R$ 160,00</td>
+                                </tr>
+                                <tr>
+                                    <td>John Employee</td>
+                                    <td>23/05/2025</td>
+                                    <td>13:00</td>
+                                    <td>17:00</td>
+                                    <td>4h</td>
+                                    <td>Reforma Residencial</td>
+                                    <td>Columbia, SC</td>
+                                    <td>R$ 160,00</td>
+                                </tr>
+                                <tr>
+                                    <td>Sarah Johnson</td>
+                                    <td>23/05/2025</td>
+                                    <td>08:00</td>
+                                    <td>12:00</td>
+                                    <td>4h</td>
+                                    <td>Instalação Solar</td>
+                                    <td>Charleston, SC</td>
+                                    <td>R$ 180,00</td>
+                                </tr>
+                                <tr>
+                                    <td>Sarah Johnson</td>
+                                    <td>23/05/2025</td>
+                                    <td>13:00</td>
+                                    <td>17:00</td>
+                                    <td>4h</td>
+                                    <td>Instalação Solar</td>
+                                    <td>Charleston, SC</td>
+                                    <td>R$ 180,00</td>
+                                </tr>
+                                <tr>
+                                    <td>John Employee</td>
+                                    <td>22/05/2025</td>
+                                    <td>08:00</td>
+                                    <td>12:00</td>
+                                    <td>4h</td>
+                                    <td>Reforma Residencial</td>
+                                    <td>Columbia, SC</td>
+                                    <td>R$ 160,00</td>
+                                </tr>
+                                <tr>
+                                    <td>John Employee</td>
+                                    <td>22/05/2025</td>
+                                    <td>13:00</td>
+                                    <td>17:00</td>
+                                    <td>4h</td>
+                                    <td>Reforma Residencial</td>
+                                    <td>Columbia, SC</td>
+                                    <td>R$ 160,00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="productivity-tab" class="tab-content">
+                <div class="chart-container">
+                    <div class="card chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Produtividade: Horas Estimadas vs. Reais</h3>
+                            <div class="chart-options">
+                                <select class="form-input" onchange="updateProductivityChart(this.value)">
+                                    <option value="project">Por Projeto</option>
+                                    <option value="employee">Por Funcionário</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="productivityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-table">
+                    <div class="card">
+                        <h3 class="card-title">Análise de Produtividade</h3>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Projeto</th>
+                                    <th>Horas Estimadas</th>
+                                    <th>Horas Reais</th>
+                                    <th>Diferença</th>
+                                    <th>Eficiência</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Reforma Residencial</td>
+                                    <td>40h</td>
+                                    <td>32h</td>
+                                    <td>-8h</td>
+                                    <td>120%</td>
+                                    <td><span style="color: #4caf50;">Acima do esperado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Instalação Solar</td>
+                                    <td>20h</td>
+                                    <td>24h</td>
+                                    <td>+4h</td>
+                                    <td>83%</td>
+                                    <td><span style="color: #f44336;">Abaixo do esperado</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="cost-tab" class="tab-content">
+                <div class="chart-container">
+                    <div class="card chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Distribuição de Custos</h3>
+                            <div class="chart-options">
+                                <select class="form-input" onchange="updateCostChart(this.value)">
+                                    <option value="project">Por Projeto</option>
+                                    <option value="employee">Por Funcionário</option>
+                                    <option value="location">Por Localização</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-table">
+                    <div class="card">
+                        <h3 class="card-title">Análise de Custos</h3>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Projeto</th>
+                                    <th>Orçamento Total</th>
+                                    <th>Custo de Mão de Obra</th>
+                                    <th>% do Orçamento</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Reforma Residencial</td>
+                                    <td>R$ 15.000,00</td>
+                                    <td>R$ 1.280,00</td>
+                                    <td>8.5%</td>
+                                    <td><span style="color: #4caf50;">Dentro do orçamento</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Instalação Solar</td>
+                                    <td>R$ 8.500,00</td>
+                                    <td>R$ 1.080,00</td>
+                                    <td>12.7%</td>
+                                    <td><span style="color: #ff9800;">Atenção</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="trends-tab" class="tab-content">
+                <div class="chart-container">
+                    <div class="card chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Tendências de Horas Trabalhadas</h3>
+                            <div class="chart-options">
+                                <select class="form-input" onchange="updateTrendsChart(this.value)">
+                                    <option value="week">Últimas 4 Semanas</option>
+                                    <option value="month">Últimos 6 Meses</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-table">
+                    <div class="card">
+                        <h3 class="card-title">Análise de Tendências</h3>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Horas Totais</th>
+                                    <th>Média Diária</th>
+                                    <th>Tendência</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Semana Atual</td>
+                                    <td>40h</td>
+                                    <td>8h</td>
+                                    <td><span style="color: #4caf50;">↑ 5%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Semana Anterior</td>
+                                    <td>38h</td>
+                                    <td>7.6h</td>
+                                    <td><span style="color: #4caf50;">↑ 2%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Duas Semanas Atrás</td>
+                                    <td>37h</td>
+                                    <td>7.4h</td>
+                                    <td><span style="color: #f44336;">↓ 3%</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Três Semanas Atrás</td>
+                                    <td>38h</td>
+                                    <td>7.6h</td>
+                                    <td><span style="color: #757575;">→ 0%</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="alerts-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Alertas e Notificações</h3>
+                    
+                    <div class="alert-card">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <h4 class="alert-title">Horas Extras Excessivas</h4>
+                            <p class="alert-message">Sarah Johnson registrou 10 horas extras na última semana, acima do limite recomendado de 8 horas.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-card">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <h4 class="alert-title">Projeto Próximo do Limite de Orçamento</h4>
+                            <p class="alert-message">O projeto "Instalação Solar" já utilizou 85% do orçamento de mão de obra com apenas 60% do trabalho concluído.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-card">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <h4 class="alert-title">Inconsistência de Localização</h4>
+                            <p class="alert-message">Detectados 2 registros de ponto para o projeto "Reforma Residencial" em localizações diferentes da especificada.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Inicializar gráficos
+        let hoursChart, productivityChart, costChart, trendsChart;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initHoursChart();
+            initProductivityChart();
+            initCostChart();
+            initTrendsChart();
+        });
+        
+        // Alternar entre abas
+        function switchTab(tabId) {
+            // Desativar todas as abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Ativar a aba selecionada
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // Inicializar gráfico de horas
+        function initHoursChart() {
+            const ctx = document.getElementById('hoursChart').getContext('2d');
+            hoursChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+                    datasets: [{
+                        label: 'Horas Trabalhadas',
+                        data: [8, 8, 8, 8, 8, 0, 0],
+                        backgroundColor: '#C69C6D',
+                        borderColor: '#0F1A20',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Horas'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Atualizar gráfico de horas
+        function updateHoursChart(type) {
+            let labels, data;
+            
+            if (type === 'day') {
+                labels = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+                data = [8, 8, 8, 8, 8, 0, 0];
+            } else if (type === 'employee') {
+                labels = ['John Employee', 'Sarah Johnson'];
+                data = [24, 16];
+            } else if (type === 'project') {
+                labels = ['Reforma Residencial', 'Instalação Solar'];
+                data = [24, 16];
+            }
+            
+            hoursChart.data.labels = labels;
+            hoursChart.data.datasets[0].data = data;
+            hoursChart.update();
+        }
+        
+        // Inicializar gráfico de produtividade
+        function initProductivityChart() {
+            const ctx = document.getElementById('productivityChart').getContext('2d');
+            productivityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Reforma Residencial', 'Instalação Solar'],
+                    datasets: [
+                        {
+                            label: 'Horas Estimadas',
+                            data: [40, 20],
+                            backgroundColor: '#0F1A20',
+                            borderColor: '#0F1A20',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Horas Reais',
+                            data: [32, 24],
+                            backgroundColor: '#C69C6D',
+                            borderColor: '#C69C6D',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Horas'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Atualizar gráfico de produtividade
+        function updateProductivityChart(type) {
+            let labels, estimated, actual;
+            
+            if (type === 'project') {
+                labels = ['Reforma Residencial', 'Instalação Solar'];
+                estimated = [40, 20];
+                actual = [32, 24];
+            } else if (type === 'employee') {
+                labels = ['John Employee', 'Sarah Johnson'];
+                estimated = [30, 30];
+                actual = [32, 24];
+            }
+            
+            productivityChart.data.labels = labels;
+            productivityChart.data.datasets[0].data = estimated;
+            productivityChart.data.datasets[1].data = actual;
+            productivityChart.update();
+        }
+        
+        // Inicializar gráfico de custos
+        function initCostChart() {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Reforma Residencial', 'Instalação Solar'],
+                    datasets: [{
+                        label: 'Custo de Mão de Obra (R$)',
+                        data: [1280, 1080],
+                        backgroundColor: '#C69C6D',
+                        borderColor: '#0F1A20',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Valor (R$)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Atualizar gráfico de custos
+        function updateCostChart(type) {
+            let labels, data;
+            
+            if (type === 'project') {
+                labels = ['Reforma Residencial', 'Instalação Solar'];
+                data = [1280, 1080];
+            } else if (type === 'employee') {
+                labels = ['John Employee', 'Sarah Johnson'];
+                data = [960, 1440];
+            } else if (type === 'location') {
+                labels = ['Columbia, SC', 'Charleston, SC'];
+                data = [1280, 1080];
+            }
+            
+            costChart.data.labels = labels;
+            costChart.data.datasets[0].data = data;
+            costChart.update();
+        }
+        
+        // Inicializar gráfico de tendências
+        function initTrendsChart() {
+            const ctx = document.getElementById('trendsChart').getContext('2d');
+            trendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+                    datasets: [{
+                        label: 'Horas Trabalhadas',
+                        data: [38, 37, 38, 40],
+                        backgroundColor: 'rgba(198, 156, 109, 0.2)',
+                        borderColor: '#C69C6D',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Horas'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Atualizar gráfico de tendências
+        function updateTrendsChart(type) {
+            let labels, data;
+            
+            if (type === 'week') {
+                labels = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'];
+                data = [38, 37, 38, 40];
+            } else if (type === 'month') {
+                labels = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'];
+                data = [150, 160, 155, 165, 170, 160];
+            }
+            
+            trendsChart.data.labels = labels;
+            trendsChart.data.datasets[0].data = data;
+            trendsChart.update();
+        }
+        
+        // Aplicar filtros
+        function applyFilters() {
+            alert('Filtros aplicados com sucesso!');
+            updateReports();
+        }
+        
+        // Atualizar relatórios
+        function updateReports() {
+            // Aqui você implementaria a lógica para atualizar os relatórios com base nos filtros
+            console.log('Atualizando relatórios...');
+        }
+        
+        // Exportar relatório
+        function exportReport(format) {
+            if (format === 'pdf') {
+                alert('Relatório exportado em PDF com sucesso!');
+            } else if (format === 'excel') {
+                alert('Relatório exportado em Excel com sucesso!');
+            }
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

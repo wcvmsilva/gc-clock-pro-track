@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Relatórios</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .filters-section {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .report-table {
+            overflow-x: auto;
+        }
+        
+        .report-empty {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-dark);
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">Admin Demo</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Relatórios</h1>
+            <button class="btn btn-primary" onclick="exportReport()">
+                Exportar PDF
+            </button>
+        </div>
+        
+        <section class="filters-section">
+            <div class="card">
+                <h2 class="card-title">Filtros</h2>
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Relatório</label>
+                        <select class="form-input">
+                            <option value="daily">Diário</option>
+                            <option value="weekly" selected>Semanal</option>
+                            <option value="monthly">Mensal</option>
+                            <option value="project">Por Projeto</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" class="form-input" value="2025-05-17">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" class="form-input" value="2025-05-23">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Funcionário</label>
+                        <select class="form-input">
+                            <option value="all">Todos</option>
+                            <option value="1">John Employee</option>
+                            <option value="2">Sarah Johnson</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary">Aplicar Filtros</button>
+            </div>
+        </section>
+        
+        <div class="report-stats">
+            <div class="card bg-primary">
+                <h3 class="card-title" style="color: white; border-color: var(--primary-gold);">Total de Horas</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0;">40h</p>
+            </div>
+            
+            <div class="card bg-gold">
+                <h3 class="card-title" style="color: var(--primary-dark); border-color: var(--primary-dark);">Custo Total</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0;">R$ 1.600,00</p>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Funcionários Ativos</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0;">2</p>
+            </div>
+        </div>
+        
+        <section class="report-table">
+            <div class="card">
+                <h2 class="card-title">Registros de Horas</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Funcionário</th>
+                            <th>Data</th>
+                            <th>Entrada</th>
+                            <th>Saída</th>
+                            <th>Horas</th>
+                            <th>Projeto</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Employee</td>
+                            <td>23/05/2025</td>
+                            <td>08:00</td>
+                            <td>12:00</td>
+                            <td>4h</td>
+                            <td>Reforma Residencial</td>
+                            <td>R$ 160,00</td>
+                        </tr>
+                        <tr>
+                            <td>John Employee</td>
+                            <td>23/05/2025</td>
+                            <td>13:00</td>
+                            <td>17:00</td>
+                            <td>4h</td>
+                            <td>Reforma Residencial</td>
+                            <td>R$ 160,00</td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>23/05/2025</td>
+                            <td>08:00</td>
+                            <td>12:00</td>
+                            <td>4h</td>
+                            <td>Instalação Solar</td>
+                            <td>R$ 180,00</td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>23/05/2025</td>
+                            <td>13:00</td>
+                            <td>17:00</td>
+                            <td>4h</td>
+                            <td>Instalação Solar</td>
+                            <td>R$ 180,00</td>
+                        </tr>
+                        <tr>
+                            <td>John Employee</td>
+                            <td>22/05/2025</td>
+                            <td>08:00</td>
+                            <td>12:00</td>
+                            <td>4h</td>
+                            <td>Reforma Residencial</td>
+                            <td>R$ 160,00</td>
+                        </tr>
+                        <tr>
+                            <td>John Employee</td>
+                            <td>22/05/2025</td>
+                            <td>13:00</td>
+                            <td>17:00</td>
+                            <td>4h</td>
+                            <td>Reforma Residencial</td>
+                            <td>R$ 160,00</td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>22/05/2025</td>
+                            <td>08:00</td>
+                            <td>12:00</td>
+                            <td>4h</td>
+                            <td>Instalação Solar</td>
+                            <td>R$ 180,00</td>
+                        </tr>
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>22/05/2025</td>
+                            <td>13:00</td>
+                            <td>17:00</td>
+                            <td>4h</td>
+                            <td>Instalação Solar</td>
+                            <td>R$ 180,00</td>
+                        </tr>
+                        <tr>
+                            <td>John Employee</td>
+                            <td>21/05/2025</td>
+                            <td>08:00</td>
+                            <td>12:00</td>
+                            <td>4h</td>
+                            <td>Reforma Residencial</td>
+                            <td>R$ 160,00</td>
+                        </tr>
+                        <tr>
+                            <td>John Employee</td>
+                            <td>21/05/2025</td>
+                            <td>13:00</td>
+                            <td>17:00</td>
+                            <td>4h</td>
+                            <td>Reforma Residencial</td>
+                            <td>R$ 160,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Função para exportar relatório
+        function exportReport() {
+            alert('Relatório exportado com sucesso!');
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

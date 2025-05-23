@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Gestão de Projetos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .project-form {
+            margin-bottom: var(--spacing-xl);
+            display: none;
+        }
+        
+        .project-form.active {
+            display: block;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .form-grid .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .project-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .project-table {
+            overflow-x: auto;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: rgba(25, 118, 210, 0.1);
+            color: #1976d2;
+        }
+        
+        .status-completed {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .action-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .action-view {
+            color: #1976d2;
+        }
+        
+        .action-edit {
+            color: var(--primary-gold);
+        }
+        
+        .tab-container {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-gold);
+            color: var(--primary-dark);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .file-upload {
+            border: 2px dashed var(--border-color);
+            padding: var(--spacing-lg);
+            text-align: center;
+            border-radius: var(--border-radius-md);
+            margin-bottom: var(--spacing-md);
+            cursor: pointer;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary-gold);
+        }
+        
+        .file-upload-icon {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .file-list {
+            margin-top: var(--spacing-md);
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .file-icon {
+            margin-right: var(--spacing-sm);
+            color: var(--primary-dark);
+        }
+        
+        .file-name {
+            flex: 1;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .material-list {
+            margin-top: var(--spacing-md);
+        }
+        
+        .material-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .material-name {
+            flex: 1;
+        }
+        
+        .material-quantity {
+            margin-right: var(--spacing-md);
+        }
+        
+        .material-cost {
+            margin-right: var(--spacing-md);
+            font-weight: 500;
+        }
+        
+        .milestone-list {
+            margin-top: var(--spacing-md);
+        }
+        
+        .milestone-item {
+            padding: var(--spacing-md);
+            border-left: 3px solid var(--primary-gold);
+            margin-bottom: var(--spacing-md);
+            background-color: rgba(198, 156, 109, 0.05);
+        }
+        
+        .milestone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .milestone-title {
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .milestone-date {
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+        
+        .milestone-progress {
+            margin-top: var(--spacing-sm);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-gold);
+        }
+        
+        .progress-text {
+            font-size: 0.75rem;
+            text-align: right;
+            margin-top: 2px;
+        }
+        
+        .team-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+        
+        .team-member {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--background-light);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--border-color);
+        }
+        
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-dark);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--spacing-sm);
+            font-weight: 500;
+        }
+        
+        .member-info {
+            font-size: 0.875rem;
+        }
+        
+        .member-name {
+            font-weight: 500;
+        }
+        
+        .member-role {
+            font-size: 0.75rem;
+            color: var(--text-dark);
+        }
+        
+        .gantt-container {
+            overflow-x: auto;
+            margin-top: var(--spacing-md);
+        }
+        
+        .gantt-chart {
+            min-width: 800px;
+        }
+        
+        .gantt-row {
+            display: flex;
+            height: 40px;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .gantt-row-header {
+            width: 200px;
+            padding: 0 var(--spacing-sm);
+            font-weight: 500;
+        }
+        
+        .gantt-row-timeline {
+            flex: 1;
+            position: relative;
+            height: 100%;
+        }
+        
+        .gantt-bar {
+            position: absolute;
+            height: 20px;
+            top: 10px;
+            background-color: var(--primary-gold);
+            border-radius: 4px;
+        }
+        
+        .gantt-timeline-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .gantt-day {
+            flex: 1;
+            text-align: center;
+            font-size: 0.75rem;
+            padding: var(--spacing-xs) 0;
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .dashboard-card {
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .dashboard-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .dashboard-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .dashboard-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .dashboard-card-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--spacing-md);
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">Admin Demo</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Gestão de Projetos</h1>
+            <button id="newProjectBtn" class="btn btn-primary" onclick="toggleProjectForm()">
+                Novo Projeto
+            </button>
+        </div>
+        
+        <section id="projectForm" class="project-form">
+            <div class="card">
+                <h2 class="card-title">Criar Novo Projeto</h2>
+                <form id="createProjectForm" onsubmit="handleCreateProject(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Projeto*</label>
+                            <input type="text" class="form-input" name="projectName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Cliente*</label>
+                            <input type="text" class="form-input" name="client" required>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">Endereço*</label>
+                            <input type="text" class="form-input" name="address" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Data de Início*</label>
+                            <input type="date" class="form-input" name="startDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Data de Término Prevista*</label>
+                            <input type="date" class="form-input" name="endDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Orçamento (R$)*</label>
+                            <input type="number" min="0" step="0.01" class="form-input" name="budget" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Projeto</label>
+                            <select class="form-input" name="projectType">
+                                <option value="renovation">Reforma</option>
+                                <option value="construction">Construção</option>
+                                <option value="solar">Instalação Solar</option>
+                                <option value="other">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Prioridade</label>
+                            <select class="form-input" name="priority">
+                                <option value="high">Alta</option>
+                                <option value="medium" selected>Média</option>
+                                <option value="low">Baixa</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">Descrição</label>
+                            <textarea class="form-input" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="button" class="btn btn-outline" onclick="toggleProjectForm()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Criar Projeto</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+        
+        <div class="project-stats">
+            <div class="card bg-primary">
+                <h3 class="card-title" style="color: white; border-color: var(--primary-gold);">Total de Projetos</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0; color: white;">3</p>
+            </div>
+            
+            <div class="card bg-gold">
+                <h3 class="card-title" style="color: var(--primary-dark); border-color: var(--primary-dark);">Em Andamento</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0; color: var(--primary-dark);">2</p>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Concluídos</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0;">1</p>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('projects-tab')">Projetos</div>
+                <div class="tab" onclick="switchTab('dashboard-tab')">Dashboard</div>
+                <div class="tab" onclick="switchTab('gantt-tab')">Cronograma (Gantt)</div>
+                <div class="tab" onclick="switchTab('documents-tab')">Documentos</div>
+                <div class="tab" onclick="switchTab('materials-tab')">Materiais</div>
+                <div class="tab" onclick="switchTab('milestones-tab')">Marcos</div>
+                <div class="tab" onclick="switchTab('team-tab')">Equipe</div>
+            </div>
+            
+            <div id="projects-tab" class="tab-content active">
+                <div class="project-table">
+                    <div class="card">
+                        <h2 class="card-title">Lista de Projetos</h2>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Cliente</th>
+                                    <th>Início</th>
+                                    <th>Término</th>
+                                    <th>Orçamento</th>
+                                    <th>Progresso</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Reforma Residencial</td>
+                                    <td>Carlos Mendes</td>
+                                    <td>15/05/2025</td>
+                                    <td>15/06/2025</td>
+                                    <td>R$ 15.000,00</td>
+                                    <td>
+                                        <div class="progress-bar" style="width: 100%;">
+                                            <div class="progress-fill" style="width: 40%;"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Em andamento</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-view" onclick="viewProject(1)">Ver</button>
+                                            <button class="action-edit" onclick="editProject(1)">Editar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Instalação Solar</td>
+                                    <td>Maria Johnson</td>
+                                    <td>10/05/2025</td>
+                                    <td>25/05/2025</td>
+                                    <td>R$ 8.500,00</td>
+                                    <td>
+                                        <div class="progress-bar" style="width: 100%;">
+                                            <div class="progress-fill" style="width: 75%;"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Em andamento</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-view" onclick="viewProject(2)">Ver</button>
+                                            <button class="action-edit" onclick="editProject(2)">Editar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Renovação de Cozinha</td>
+                                    <td>Robert Smith</td>
+                                    <td>20/04/2025</td>
+                                    <td>10/05/2025</td>
+                                    <td>R$ 12.000,00</td>
+                                    <td>
+                                        <div class="progress-bar" style="width: 100%;">
+                                            <div class="progress-fill" style="width: 100%;"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-badge status-completed">Concluído</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-view" onclick="viewProject(3)">Ver</button>
+                                            <button class="action-edit" onclick="editProject(3)">Editar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dashboard-tab" class="tab-content">
+                <div class="dashboard-cards">
+                    <div class="card dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">Projetos Ativos</h3>
+                        </div>
+                        <p class="dashboard-card-value">2</p>
+                        <div class="dashboard-card-footer">
+                            <span>Total: 3 projetos</span>
+                            <span style="color: #4caf50;">↑ 1 este mês</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">Orçamento Total</h3>
+                        </div>
+                        <p class="dashboard-card-value">R$ 35.500</p>
+                        <div class="dashboard-card-footer">
+                            <span>3 projetos</span>
+                            <span style="color: #4caf50;">↑ R$ 8.500 este mês</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h3 class="dashboard-card-title">Horas Trabalhadas</h3>
+                        </div>
+                        <p class="dashboard-card-value">116h</p>
+                        <div class="dashboard-card-footer">
+                            <span>Todos os projetos</span>
+                            <span style="color: #4caf50;">↑ 40h esta semana</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Progresso dos Projetos</h3>
+                    <canvas id="projectProgressChart" height="300"></canvas>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg); margin-top: var(--spacing-xl);">
+                    <div class="card">
+                        <h3 class="card-title">Distribuição de Orçamento</h3>
+                        <canvas id="budgetDistributionChart" height="250"></canvas>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 class="card-title">Status dos Projetos</h3>
+                        <canvas id="projectStatusChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="gantt-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Cronograma de Projetos</h3>
+                    
+                    <div class="gantt-container">
+                        <div class="gantt-chart">
+                            <div class="gantt-timeline-header">
+                                <div style="width: 200px;"></div>
+                                <div style="flex: 1; display: flex;">
+                                    <div class="gantt-day">15/05</div>
+                                    <div class="gantt-day">16/05</div>
+                                    <div class="gantt-day">17/05</div>
+                                    <div class="gantt-day">18/05</div>
+                                    <div class="gantt-day">19/05</div>
+                                    <div class="gantt-day">20/05</div>
+                                    <div class="gantt-day">21/05</div>
+                                    <div class="gantt-day">22/05</div>
+                                    <div class="gantt-day">23/05</div>
+                                    <div class="gantt-day">24/05</div>
+                                    <div class="gantt-day">25/05</div>
+                                    <div class="gantt-day">26/05</div>
+                                    <div class="gantt-day">27/05</div>
+                                    <div class="gantt-day">28/05</div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Reforma Residencial</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 0%; width: 100%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Demolição</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 0%; width: 21.4%; background-color: #4CAF50;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Instalação Elétrica</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 21.4%; width: 28.6%; background-color: #2196F3;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Instalação Hidráulica</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 35.7%; width: 28.6%; background-color: #FF9800;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Acabamento</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 64.3%; width: 35.7%; background-color: #9C27B0;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Instalação Solar</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 0%; width: 78.6%; background-color: #C69C6D;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Preparação do Telhado</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 0%; width: 21.4%; background-color: #4CAF50;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Instalação dos Painéis</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 21.4%; width: 35.7%; background-color: #2196F3;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="gantt-row">
+                                <div class="gantt-row-header">Conexão Elétrica</div>
+                                <div class="gantt-row-timeline">
+                                    <div class="gantt-bar" style="left: 57.1%; width: 21.4%; background-color: #FF9800;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="documents-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Documentos do Projeto</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Projeto</label>
+                        <select class="form-input" onchange="filterDocuments()">
+                            <option value="all">Todos os Projetos</option>
+                            <option value="1">Reforma Residencial</option>
+                            <option value="2">Instalação Solar</option>
+                            <option value="3">Renovação de Cozinha</option>
+                        </select>
+                    </div>
+                    
+                    <div class="file-upload" onclick="triggerFileUpload()">
+                        <div class="file-upload-icon">📁</div>
+                        <p>Clique para fazer upload ou arraste arquivos aqui</p>
+                        <input type="file" id="fileUpload" style="display: none;" multiple onchange="handleFileUpload(this.files)">
+                    </div>
+                    
+                    <div class="file-list">
+                        <div class="file-item">
+                            <div class="file-icon">📄</div>
+                            <div class="file-name">Contrato - Reforma Residencial.pdf</div>
+                            <div class="file-actions">
+                                <button class="btn btn-outline" onclick="viewFile(1)">Ver</button>
+                                <button class="btn btn-outline" onclick="downloadFile(1)">Baixar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="file-item">
+                            <div class="file-icon">📄</div>
+                            <div class="file-name">Orçamento - Reforma Residencial.xlsx</div>
+                            <div class="file-actions">
+                                <button class="btn btn-outline" onclick="viewFile(2)">Ver</button>
+                                <button class="btn btn-outline" onclick="downloadFile(2)">Baixar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="file-item">
+                            <div class="file-icon">🖼️</div>
+                            <div class="file-name">Foto - Antes da Reforma.jpg</div>
+                            <div class="file-actions">
+                                <button class="btn btn-outline" onclick="viewFile(3)">Ver</button>
+                                <button class="btn btn-outline" onclick="downloadFile(3)">Baixar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="file-item">
+                            <div class="file-icon">📄</div>
+                            <div class="file-name">Contrato - Instalação Solar.pdf</div>
+                            <div class="file-actions">
+                                <button class="btn btn-outline" onclick="viewFile(4)">Ver</button>
+                                <button class="btn btn-outline" onclick="downloadFile(4)">Baixar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="file-item">
+                            <div class="file-icon">🖼️</div>
+                            <div class="file-name">Foto - Telhado para Instalação Solar.jpg</div>
+                            <div class="file-actions">
+                                <button class="btn btn-outline" onclick="viewFile(5)">Ver</button>
+                                <button class="btn btn-outline" onclick="downloadFile(5)">Baixar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="materials-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Materiais do Projeto</h3>
+                    
+                    <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Projeto</label>
+                            <select class="form-input" onchange="filterMaterials()">
+                                <option value="all">Todos os Projetos</option>
+                                <option value="1">Reforma Residencial</option>
+                                <option value="2">Instalação Solar</option>
+                                <option value="3">Renovação de Cozinha</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="align-self: flex-end;" onclick="addMaterial()">Adicionar Material</button>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Quantidade</th>
+                                <th>Unidade</th>
+                                <th>Custo Unitário</th>
+                                <th>Custo Total</th>
+                                <th>Projeto</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tinta Premium</td>
+                                <td>5</td>
+                                <td>Galão</td>
+                                <td>R$ 120,00</td>
+                                <td>R$ 600,00</td>
+                                <td>Reforma Residencial</td>
+                                <td><span class="status-badge status-active">Adquirido</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editMaterial(1)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Cerâmica</td>
+                                <td>30</td>
+                                <td>m²</td>
+                                <td>R$ 45,00</td>
+                                <td>R$ 1.350,00</td>
+                                <td>Reforma Residencial</td>
+                                <td><span class="status-badge status-active">Adquirido</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editMaterial(2)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Painéis Solares</td>
+                                <td>10</td>
+                                <td>Unidade</td>
+                                <td>R$ 500,00</td>
+                                <td>R$ 5.000,00</td>
+                                <td>Instalação Solar</td>
+                                <td><span class="status-badge status-active">Adquirido</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editMaterial(3)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Inversor</td>
+                                <td>1</td>
+                                <td>Unidade</td>
+                                <td>R$ 2.000,00</td>
+                                <td>R$ 2.000,00</td>
+                                <td>Instalação Solar</td>
+                                <td><span class="status-badge status-active">Adquirido</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editMaterial(4)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="milestones-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Marcos do Projeto</h3>
+                    
+                    <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Projeto</label>
+                            <select class="form-input" onchange="filterMilestones()">
+                                <option value="all">Todos os Projetos</option>
+                                <option value="1">Reforma Residencial</option>
+                                <option value="2">Instalação Solar</option>
+                                <option value="3">Renovação de Cozinha</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="align-self: flex-end;" onclick="addMilestone()">Adicionar Marco</button>
+                    </div>
+                    
+                    <div class="milestone-list">
+                        <div class="milestone-item">
+                            <div class="milestone-header">
+                                <h4 class="milestone-title">Demolição Concluída</h4>
+                                <span class="milestone-date">18/05/2025</span>
+                            </div>
+                            <p>Remoção de paredes e preparação para novas instalações.</p>
+                            <div class="milestone-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%;"></div>
+                                </div>
+                                <div class="progress-text">100% concluído</div>
+                            </div>
+                        </div>
+                        
+                        <div class="milestone-item">
+                            <div class="milestone-header">
+                                <h4 class="milestone-title">Instalação Elétrica</h4>
+                                <span class="milestone-date">25/05/2025</span>
+                            </div>
+                            <p>Instalação de nova fiação e pontos elétricos.</p>
+                            <div class="milestone-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 60%;"></div>
+                                </div>
+                                <div class="progress-text">60% concluído</div>
+                            </div>
+                        </div>
+                        
+                        <div class="milestone-item">
+                            <div class="milestone-header">
+                                <h4 class="milestone-title">Instalação Hidráulica</h4>
+                                <span class="milestone-date">01/06/2025</span>
+                            </div>
+                            <p>Instalação de novas tubulações e conexões.</p>
+                            <div class="milestone-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 20%;"></div>
+                                </div>
+                                <div class="progress-text">20% concluído</div>
+                            </div>
+                        </div>
+                        
+                        <div class="milestone-item">
+                            <div class="milestone-header">
+                                <h4 class="milestone-title">Acabamento</h4>
+                                <span class="milestone-date">15/06/2025</span>
+                            </div>
+                            <p>Pintura, instalação de pisos e acabamentos finais.</p>
+                            <div class="milestone-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-text">0% concluído</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="team-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Equipe do Projeto</h3>
+                    
+                    <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Projeto</label>
+                            <select class="form-input" onchange="filterTeam()">
+                                <option value="all">Todos os Projetos</option>
+                                <option value="1">Reforma Residencial</option>
+                                <option value="2">Instalação Solar</option>
+                                <option value="3">Renovação de Cozinha</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="align-self: flex-end;" onclick="assignTeamMember()">Atribuir Membro</button>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Função</th>
+                                <th>Projeto</th>
+                                <th>Data de Início</th>
+                                <th>Horas Alocadas</th>
+                                <th>Horas Trabalhadas</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>John Employee</td>
+                                <td>Carpinteiro</td>
+                                <td>Reforma Residencial</td>
+                                <td>15/05/2025</td>
+                                <td>80h</td>
+                                <td>32h</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editAssignment(1)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Sarah Johnson</td>
+                                <td>Eletricista</td>
+                                <td>Reforma Residencial</td>
+                                <td>18/05/2025</td>
+                                <td>40h</td>
+                                <td>16h</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editAssignment(2)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Sarah Johnson</td>
+                                <td>Instaladora Solar</td>
+                                <td>Instalação Solar</td>
+                                <td>10/05/2025</td>
+                                <td>60h</td>
+                                <td>48h</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-edit" onclick="editAssignment(3)">Editar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+        });
+        
+        // Alternar formulário de projeto
+        function toggleProjectForm() {
+            const form = document.getElementById('projectForm');
+            const btn = document.getElementById('newProjectBtn');
+            
+            if (form.classList.contains('active')) {
+                form.classList.remove('active');
+                btn.textContent = 'Novo Projeto';
+            } else {
+                form.classList.add('active');
+                btn.textContent = 'Cancelar';
+                
+                // Preencher data atual e data de término padrão (30 dias depois)
+                const today = new Date();
+                const endDate = new Date();
+                endDate.setDate(today.getDate() + 30);
+                
+                document.querySelector('input[name="startDate"]').value = formatDate(today);
+                document.querySelector('input[name="endDate"]').value = formatDate(endDate);
+            }
+        }
+        
+        // Formatar data para YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Alternar entre abas
+        function switchTab(tabId) {
+            // Desativar todas as abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Ativar a aba selecionada
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // Inicializar gráficos
+        function initCharts() {
+            // Verificar se Chart.js está carregado
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não carregado');
+                return;
+            }
+            
+            // Gráfico de progresso dos projetos
+            const progressCtx = document.getElementById('projectProgressChart').getContext('2d');
+            new Chart(progressCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Reforma Residencial', 'Instalação Solar', 'Renovação de Cozinha'],
+                    datasets: [
+                        {
+                            label: 'Progresso (%)',
+                            data: [40, 75, 100],
+                            backgroundColor: '#C69C6D',
+                            borderColor: '#0F1A20',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Progresso (%)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de distribuição de orçamento
+            const budgetCtx = document.getElementById('budgetDistributionChart').getContext('2d');
+            new Chart(budgetCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Reforma Residencial', 'Instalação Solar', 'Renovação de Cozinha'],
+                    datasets: [{
+                        data: [15000, 8500, 12000],
+                        backgroundColor: ['#0F1A20', '#C69C6D', '#4CAF50'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de status dos projetos
+            const statusCtx = document.getElementById('projectStatusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Em Andamento', 'Concluído', 'Não Iniciado'],
+                    datasets: [{
+                        data: [2, 1, 0],
+                        backgroundColor: ['#2196F3', '#4CAF50', '#9E9E9E'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Criar projeto
+        function handleCreateProject(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const projectData = {
+                name: formData.get('projectName'),
+                client: formData.get('client'),
+                address: formData.get('address'),
+                startDate: formData.get('startDate'),
+                endDate: formData.get('endDate'),
+                budget: formData.get('budget'),
+                type: formData.get('projectType'),
+                priority: formData.get('priority'),
+                description: formData.get('description')
+            };
+            
+            // Aqui você enviaria os dados para o servidor
+            console.log('Criando projeto:', projectData);
+            
+            // Simulação de sucesso
+            alert('Projeto criado com sucesso!');
+            toggleProjectForm();
+            event.target.reset();
+        }
+        
+        // Ver projeto
+        function viewProject(id) {
+            alert(`Visualizando detalhes do projeto ${id}`);
+        }
+        
+        // Editar projeto
+        function editProject(id) {
+            alert(`Editando projeto ${id}`);
+        }
+        
+        // Acionar upload de arquivo
+        function triggerFileUpload() {
+            document.getElementById('fileUpload').click();
+        }
+        
+        // Manipular upload de arquivo
+        function handleFileUpload(files) {
+            // Aqui você implementaria a lógica para fazer upload dos arquivos
+            alert(`${files.length} arquivo(s) selecionado(s) para upload`);
+        }
+        
+        // Filtrar documentos
+        function filterDocuments() {
+            // Aqui você implementaria a lógica para filtrar os documentos
+            alert('Filtros aplicados aos documentos');
+        }
+        
+        // Ver arquivo
+        function viewFile(id) {
+            alert(`Visualizando arquivo ${id}`);
+        }
+        
+        // Baixar arquivo
+        function downloadFile(id) {
+            alert(`Baixando arquivo ${id}`);
+        }
+        
+        // Adicionar material
+        function addMaterial() {
+            alert('Adicionando novo material');
+        }
+        
+        // Editar material
+        function editMaterial(id) {
+            alert(`Editando material ${id}`);
+        }
+        
+        // Filtrar materiais
+        function filterMaterials() {
+            // Aqui você implementaria a lógica para filtrar os materiais
+            alert('Filtros aplicados aos materiais');
+        }
+        
+        // Adicionar marco
+        function addMilestone() {
+            alert('Adicionando novo marco');
+        }
+        
+        // Filtrar marcos
+        function filterMilestones() {
+            // Aqui você implementaria a lógica para filtrar os marcos
+            alert('Filtros aplicados aos marcos');
+        }
+        
+        // Atribuir membro à equipe
+        function assignTeamMember() {
+            alert('Atribuindo novo membro à equipe');
+        }
+        
+        // Editar atribuição
+        function editAssignment(id) {
+            alert(`Editando atribuição ${id}`);
+        }
+        
+        // Filtrar equipe
+        function filterTeam() {
+            // Aqui você implementaria a lógica para filtrar a equipe
+            alert('Filtros aplicados à equipe');
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Geolocalização</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .map-container {
+            height: 500px;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--border-radius-md);
+        }
+        
+        .location-filters {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .location-filters .form-group {
+            flex: 1;
+        }
+        
+        .location-history {
+            margin-top: var(--spacing-xl);
+        }
+        
+        .location-card {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .location-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-dark);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--spacing-md);
+        }
+        
+        .location-details {
+            flex: 1;
+        }
+        
+        .location-address {
+            font-weight: 500;
+            margin: 0 0 var(--spacing-xs);
+        }
+        
+        .location-meta {
+            display: flex;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+        
+        .location-meta span {
+            margin-right: var(--spacing-md);
+        }
+        
+        .location-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-valid {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+        
+        .status-invalid {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+        
+        .fence-list {
+            margin-top: var(--spacing-xl);
+        }
+        
+        .fence-card {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .fence-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: var(--spacing-md);
+        }
+        
+        .fence-details {
+            flex: 1;
+        }
+        
+        .fence-name {
+            font-weight: 500;
+            margin: 0 0 var(--spacing-xs);
+        }
+        
+        .fence-address {
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        
+        .fence-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .tab-container {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-gold);
+            color: var(--primary-dark);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .location-filters {
+                flex-direction: column;
+            }
+            
+            .map-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">Admin Demo</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Geolocalização Avançada</h1>
+            <button class="btn btn-primary" onclick="addGeofence()">
+                Nova Cerca Virtual
+            </button>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('map-tab')">Mapa em Tempo Real</div>
+                <div class="tab" onclick="switchTab('history-tab')">Histórico de Localizações</div>
+                <div class="tab" onclick="switchTab('fence-tab')">Cercas Virtuais</div>
+            </div>
+            
+            <div id="map-tab" class="tab-content active">
+                <div class="location-filters">
+                    <div class="form-group">
+                        <label class="form-label">Funcionário</label>
+                        <select class="form-input" id="employee-filter" onchange="filterLocations()">
+                            <option value="all">Todos</option>
+                            <option value="1">John Employee</option>
+                            <option value="2">Sarah Johnson</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Projeto</label>
+                        <select class="form-input" id="project-filter" onchange="filterLocations()">
+                            <option value="all">Todos</option>
+                            <option value="1">Reforma Residencial</option>
+                            <option value="2">Instalação Solar</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-input" id="date-filter" value="2025-05-23" onchange="filterLocations()">
+                    </div>
+                </div>
+                
+                <div class="card map-container">
+                    <div id="map"></div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Funcionários Ativos</h3>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">JE</div>
+                        <div class="location-details">
+                            <h4 class="location-address">John Employee</h4>
+                            <div class="location-meta">
+                                <span>Reforma Residencial</span>
+                                <span>Columbia, SC</span>
+                                <span>Última atualização: 10 min atrás</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-valid">No local</span>
+                    </div>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">SJ</div>
+                        <div class="location-details">
+                            <h4 class="location-address">Sarah Johnson</h4>
+                            <div class="location-meta">
+                                <span>Instalação Solar</span>
+                                <span>Charleston, SC</span>
+                                <span>Última atualização: 5 min atrás</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-valid">No local</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="history-tab" class="tab-content">
+                <div class="location-filters">
+                    <div class="form-group">
+                        <label class="form-label">Funcionário</label>
+                        <select class="form-input" onchange="filterHistory()">
+                            <option value="all">Todos</option>
+                            <option value="1">John Employee</option>
+                            <option value="2">Sarah Johnson</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data Inicial</label>
+                        <input type="date" class="form-input" value="2025-05-17" onchange="filterHistory()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Data Final</label>
+                        <input type="date" class="form-input" value="2025-05-23" onchange="filterHistory()">
+                    </div>
+                </div>
+                
+                <div class="card location-history">
+                    <h3 class="card-title">Histórico de Localizações</h3>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">JE</div>
+                        <div class="location-details">
+                            <h4 class="location-address">123 Main St, Columbia, SC</h4>
+                            <div class="location-meta">
+                                <span>John Employee</span>
+                                <span>Reforma Residencial</span>
+                                <span>23/05/2025 08:00</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-valid">Entrada</span>
+                    </div>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">JE</div>
+                        <div class="location-details">
+                            <h4 class="location-address">123 Main St, Columbia, SC</h4>
+                            <div class="location-meta">
+                                <span>John Employee</span>
+                                <span>Reforma Residencial</span>
+                                <span>23/05/2025 12:00</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-valid">Saída</span>
+                    </div>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">JE</div>
+                        <div class="location-details">
+                            <h4 class="location-address">123 Main St, Columbia, SC</h4>
+                            <div class="location-meta">
+                                <span>John Employee</span>
+                                <span>Reforma Residencial</span>
+                                <span>23/05/2025 13:00</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-valid">Entrada</span>
+                    </div>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">SJ</div>
+                        <div class="location-details">
+                            <h4 class="location-address">456 Oak Ave, Charleston, SC</h4>
+                            <div class="location-meta">
+                                <span>Sarah Johnson</span>
+                                <span>Instalação Solar</span>
+                                <span>23/05/2025 08:00</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-valid">Entrada</span>
+                    </div>
+                    
+                    <div class="location-card">
+                        <div class="location-icon">SJ</div>
+                        <div class="location-details">
+                            <h4 class="location-address">789 Pine St, Charleston, SC</h4>
+                            <div class="location-meta">
+                                <span>Sarah Johnson</span>
+                                <span>Instalação Solar</span>
+                                <span>22/05/2025 15:30</span>
+                            </div>
+                        </div>
+                        <span class="location-status status-invalid">Fora do local</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="fence-tab" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">Cercas Virtuais</h3>
+                    <p>Configure cercas virtuais para validar a presença dos funcionários nos locais de trabalho.</p>
+                    
+                    <div class="fence-list">
+                        <div class="fence-card">
+                            <div class="fence-color" style="background-color: #4CAF50;"></div>
+                            <div class="fence-details">
+                                <h4 class="fence-name">Reforma Residencial</h4>
+                                <p class="fence-address">123 Main St, Columbia, SC (Raio: 100m)</p>
+                            </div>
+                            <div class="fence-actions">
+                                <button class="btn btn-outline" onclick="editFence(1)">Editar</button>
+                                <button class="btn btn-outline" onclick="deleteFence(1)">Excluir</button>
+                            </div>
+                        </div>
+                        
+                        <div class="fence-card">
+                            <div class="fence-color" style="background-color: #2196F3;"></div>
+                            <div class="fence-details">
+                                <h4 class="fence-name">Instalação Solar</h4>
+                                <p class="fence-address">456 Oak Ave, Charleston, SC (Raio: 150m)</p>
+                            </div>
+                            <div class="fence-actions">
+                                <button class="btn btn-outline" onclick="editFence(2)">Editar</button>
+                                <button class="btn btn-outline" onclick="deleteFence(2)">Excluir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Mapa e marcadores
+        let map, markers = [];
+        
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+        });
+        
+        // Alternar entre abas
+        function switchTab(tabId) {
+            // Desativar todas as abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Ativar a aba selecionada
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            
+            // Redimensionar o mapa se necessário
+            if (tabId === 'map-tab' && map) {
+                google.maps.event.trigger(map, 'resize');
+            }
+        }
+        
+        // Inicializar o mapa
+        function initMap() {
+            // Verificar se a API do Google Maps está carregada
+            if (typeof google === 'undefined') {
+                console.error('Google Maps API não carregada');
+                return;
+            }
+            
+            // Coordenadas de Columbia, SC
+            const columbia = { lat: 34.0007, lng: -81.0348 };
+            
+            // Criar o mapa
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: columbia,
+                zoom: 12,
+                styles: [
+                    {
+                        "featureType": "all",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#f5f5f5"}]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "geometry",
+                        "stylers": [{"color": "#c9c9c9"}]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{"color": "#9e9e9e"}]
+                    }
+                ]
+            });
+            
+            // Adicionar marcadores de exemplo
+            addMarker({ lat: 34.0007, lng: -81.0348 }, 'John Employee', 'Reforma Residencial');
+            addMarker({ lat: 32.7765, lng: -79.9311 }, 'Sarah Johnson', 'Instalação Solar');
+            
+            // Adicionar cercas virtuais de exemplo
+            addGeofenceCircle({ lat: 34.0007, lng: -81.0348 }, 100, '#4CAF50');
+            addGeofenceCircle({ lat: 32.7765, lng: -79.9311 }, 150, '#2196F3');
+        }
+        
+        // Adicionar marcador ao mapa
+        function addMarker(position, title, project) {
+            const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                title: title,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    fillColor: '#C69C6D',
+                    fillOpacity: 1,
+                    strokeColor: '#0F1A20',
+                    strokeWeight: 2,
+                    scale: 8
+                }
+            });
+            
+            // Adicionar informações ao marcador
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="padding: 10px;">
+                        <h3 style="margin: 0 0 5px;">${title}</h3>
+                        <p style="margin: 0;">${project}</p>
+                    </div>
+                `
+            });
+            
+            // Abrir janela de informações ao clicar no marcador
+            marker.addListener('click', () => {
+                infoWindow.open(map, marker);
+            });
+            
+            markers.push(marker);
+            return marker;
+        }
+        
+        // Adicionar círculo de cerca virtual
+        function addGeofenceCircle(center, radius, color) {
+            const circle = new google.maps.Circle({
+                strokeColor: color,
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: color,
+                fillOpacity: 0.1,
+                map: map,
+                center: center,
+                radius: radius
+            });
+            
+            return circle;
+        }
+        
+        // Filtrar localizações no mapa
+        function filterLocations() {
+            // Aqui você implementaria a lógica para filtrar os marcadores no mapa
+            alert('Filtros aplicados ao mapa');
+        }
+        
+        // Filtrar histórico de localizações
+        function filterHistory() {
+            // Aqui você implementaria a lógica para filtrar o histórico de localizações
+            alert('Filtros aplicados ao histórico');
+        }
+        
+        // Adicionar nova cerca virtual
+        function addGeofence() {
+            // Aqui você implementaria a lógica para adicionar uma nova cerca virtual
+            alert('Funcionalidade para adicionar nova cerca virtual');
+        }
+        
+        // Editar cerca virtual
+        function editFence(id) {
+            alert(`Editando cerca virtual ${id}`);
+        }
+        
+        // Excluir cerca virtual
+        function deleteFence(id) {
+            alert(`Excluindo cerca virtual ${id}`);
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

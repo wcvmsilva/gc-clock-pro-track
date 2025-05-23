@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Sistema de Notificações</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .notification-list {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .notification-item {
+            display: flex;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+        
+        .notification-item:hover {
+            background-color: rgba(198, 156, 109, 0.05);
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-dark);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--spacing-md);
+            font-size: 1.25rem;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 500;
+            margin: 0 0 var(--spacing-xs);
+        }
+        
+        .notification-message {
+            margin: 0;
+            color: var(--text-dark);
+        }
+        
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: var(--spacing-xs);
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .notification-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: var(--spacing-md);
+            align-self: center;
+        }
+        
+        .status-unread {
+            background-color: var(--primary-gold);
+        }
+        
+        .status-read {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+        }
+        
+        .tab-container {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-gold);
+            color: var(--primary-dark);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .notification-settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        
+        .settings-card {
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .settings-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 var(--spacing-md);
+        }
+        
+        .settings-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+        }
+        
+        .settings-label {
+            font-weight: 500;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary-gold);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .reminder-form {
+            margin-top: var(--spacing-lg);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .form-grid .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .reminder-list {
+            margin-top: var(--spacing-lg);
+        }
+        
+        .reminder-item {
+            display: flex;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+        
+        .reminder-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--spacing-md);
+            font-size: 1.25rem;
+        }
+        
+        .reminder-content {
+            flex: 1;
+        }
+        
+        .reminder-title {
+            font-weight: 500;
+            margin: 0 0 var(--spacing-xs);
+        }
+        
+        .reminder-details {
+            display: flex;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+        
+        .reminder-details span {
+            margin-right: var(--spacing-md);
+        }
+        
+        .reminder-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .notification-settings {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">Admin Demo</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Sistema de Notificações</h1>
+            <button class="btn btn-primary" onclick="markAllAsRead()">
+                Marcar Todas como Lidas
+            </button>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('notifications-tab')">Notificações</div>
+                <div class="tab" onclick="switchTab('reminders-tab')">Lembretes</div>
+                <div class="tab" onclick="switchTab('settings-tab')">Configurações</div>
+            </div>
+            
+            <div id="notifications-tab" class="tab-content active">
+                <div class="card notification-list">
+                    <div class="notification-item">
+                        <div class="notification-status status-unread"></div>
+                        <div class="notification-icon">⏰</div>
+                        <div class="notification-content">
+                            <h4 class="notification-title">Registro de Ponto Pendente</h4>
+                            <p class="notification-message">John Employee ainda não registrou o ponto de saída de ontem.</p>
+                            <p class="notification-time">Hoje, 08:30</p>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-outline" onclick="markAsRead(1)">Marcar como Lida</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-status status-unread"></div>
+                        <div class="notification-icon">📊</div>
+                        <div class="notification-content">
+                            <h4 class="notification-title">Relatório Semanal Disponível</h4>
+                            <p class="notification-message">O relatório semanal de horas trabalhadas está disponível para revisão.</p>
+                            <p class="notification-time">Hoje, 07:15</p>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-outline" onclick="viewReport()">Ver Relatório</button>
+                            <button class="btn btn-outline" onclick="markAsRead(2)">Marcar como Lida</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-status status-read"></div>
+                        <div class="notification-icon">📍</div>
+                        <div class="notification-content">
+                            <h4 class="notification-title">Alerta de Localização</h4>
+                            <p class="notification-message">Sarah Johnson registrou ponto fora do local de trabalho designado.</p>
+                            <p class="notification-time">Ontem, 14:22</p>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-outline" onclick="viewLocation()">Ver Localização</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-status status-read"></div>
+                        <div class="notification-icon">⚠️</div>
+                        <div class="notification-content">
+                            <h4 class="notification-title">Horas Extras Registradas</h4>
+                            <p class="notification-message">John Employee registrou 2 horas extras no projeto "Reforma Residencial".</p>
+                            <p class="notification-time">22/05/2025, 18:45</p>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-outline" onclick="viewTimesheet()">Ver Registro</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-status status-read"></div>
+                        <div class="notification-icon">🏗️</div>
+                        <div class="notification-content">
+                            <h4 class="notification-title">Marco de Projeto Concluído</h4>
+                            <p class="notification-message">O marco "Demolição Concluída" do projeto "Reforma Residencial" foi marcado como concluído.</p>
+                            <p class="notification-time">18/05/2025, 16:30</p>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-outline" onclick="viewProject()">Ver Projeto</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reminders-tab" class="tab-content">
+                <div class="card">
+                    <h2 class="card-title">Criar Lembrete</h2>
+                    <form class="reminder-form" onsubmit="createReminder(event)">
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label class="form-label">Título*</label>
+                                <input type="text" class="form-input" name="title" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Data*</label>
+                                <input type="date" class="form-input" name="date" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Hora*</label>
+                                <input type="time" class="form-input" name="time" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Tipo</label>
+                                <select class="form-input" name="type">
+                                    <option value="personal">Pessoal</option>
+                                    <option value="project">Projeto</option>
+                                    <option value="employee">Funcionário</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Relacionado a</label>
+                                <select class="form-input" name="relatedTo">
+                                    <option value="">Selecione...</option>
+                                    <option value="project1">Reforma Residencial</option>
+                                    <option value="project2">Instalação Solar</option>
+                                    <option value="employee1">John Employee</option>
+                                    <option value="employee2">Sarah Johnson</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">Descrição</label>
+                                <textarea class="form-input" name="description" rows="3"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="reset" class="btn btn-outline">Limpar</button>
+                            <button type="submit" class="btn btn-primary">Criar Lembrete</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card reminder-list">
+                    <h2 class="card-title">Lembretes Ativos</h2>
+                    
+                    <div class="reminder-item">
+                        <div class="reminder-icon">🔔</div>
+                        <div class="reminder-content">
+                            <h4 class="reminder-title">Reunião de Acompanhamento</h4>
+                            <div class="reminder-details">
+                                <span>24/05/2025, 10:00</span>
+                                <span>Projeto: Reforma Residencial</span>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="btn btn-outline" onclick="editReminder(1)">Editar</button>
+                            <button class="btn btn-outline" onclick="deleteReminder(1)">Excluir</button>
+                        </div>
+                    </div>
+                    
+                    <div class="reminder-item">
+                        <div class="reminder-icon">🔔</div>
+                        <div class="reminder-content">
+                            <h4 class="reminder-title">Aprovação de Horas Semanais</h4>
+                            <div class="reminder-details">
+                                <span>26/05/2025, 17:00</span>
+                                <span>Tipo: Administrativo</span>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="btn btn-outline" onclick="editReminder(2)">Editar</button>
+                            <button class="btn btn-outline" onclick="deleteReminder(2)">Excluir</button>
+                        </div>
+                    </div>
+                    
+                    <div class="reminder-item">
+                        <div class="reminder-icon">🔔</div>
+                        <div class="reminder-content">
+                            <h4 class="reminder-title">Entrega de Materiais</h4>
+                            <div class="reminder-details">
+                                <span>27/05/2025, 09:00</span>
+                                <span>Projeto: Instalação Solar</span>
+                            </div>
+                        </div>
+                        <div class="reminder-actions">
+                            <button class="btn btn-outline" onclick="editReminder(3)">Editar</button>
+                            <button class="btn btn-outline" onclick="deleteReminder(3)">Excluir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="settings-tab" class="tab-content">
+                <div class="notification-settings">
+                    <div class="card settings-card">
+                        <h3 class="settings-title">Notificações por Email</h3>
+                        
+                        <div class="settings-group">
+                            <div class="settings-item">
+                                <span class="settings-label">Relatórios Diários</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Relatórios Semanais</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Alertas de Localização</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Horas Extras</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Marcos de Projetos</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card settings-card">
+                        <h3 class="settings-title">Notificações no Sistema</h3>
+                        
+                        <div class="settings-group">
+                            <div class="settings-item">
+                                <span class="settings-label">Registros de Ponto</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Novos Relatórios</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Alertas de Localização</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Horas Extras</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Atualizações de Projetos</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card settings-card">
+                        <h3 class="settings-title">Lembretes</h3>
+                        
+                        <div class="settings-group">
+                            <div class="settings-item">
+                                <span class="settings-label">Lembretes por Email</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Lembretes no Sistema</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="settings-item">
+                                <span class="settings-label">Antecedência de Lembretes</span>
+                                <select class="form-input">
+                                    <option value="15">15 minutos</option>
+                                    <option value="30" selected>30 minutos</option>
+                                    <option value="60">1 hora</option>
+                                    <option value="120">2 horas</option>
+                                    <option value="1440">1 dia</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; margin-top: var(--spacing-xl);">
+                    <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preencher data atual para o formulário de lembrete
+            const today = new Date();
+            document.querySelector('input[name="date"]').value = formatDate(today);
+            
+            // Preencher hora atual para o formulário de lembrete
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.querySelector('input[name="time"]').value = `${hours}:${minutes}`;
+        });
+        
+        // Formatar data para YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Alternar entre abas
+        function switchTab(tabId) {
+            // Desativar todas as abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Ativar a aba selecionada
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // Marcar notificação como lida
+        function markAsRead(id) {
+            // Aqui você implementaria a lógica para marcar a notificação como lida
+            alert(`Notificação ${id} marcada como lida`);
+            
+            // Simulação de atualização visual
+            const notificationItems = document.querySelectorAll('.notification-item');
+            if (id <= notificationItems.length) {
+                const statusIndicator = notificationItems[id - 1].querySelector('.notification-status');
+                statusIndicator.classList.remove('status-unread');
+                statusIndicator.classList.add('status-read');
+                
+                // Atualizar botões
+                const actions = notificationItems[id - 1].querySelector('.notification-actions');
+                actions.innerHTML = `<button class="btn btn-outline" onclick="viewDetails(${id})">Ver Detalhes</button>`;
+            }
+        }
+        
+        // Marcar todas as notificações como lidas
+        function markAllAsRead() {
+            // Aqui você implementaria a lógica para marcar todas as notificações como lidas
+            alert('Todas as notificações marcadas como lidas');
+            
+            // Simulação de atualização visual
+            document.querySelectorAll('.notification-status').forEach(status => {
+                status.classList.remove('status-unread');
+                status.classList.add('status-read');
+            });
+            
+            // Atualizar botões
+            document.querySelectorAll('.notification-item').forEach((item, index) => {
+                const actions = item.querySelector('.notification-actions');
+                actions.innerHTML = `<button class="btn btn-outline" onclick="viewDetails(${index + 1})">Ver Detalhes</button>`;
+            });
+        }
+        
+        // Ver relatório
+        function viewReport() {
+            window.location.href = 'detailed-reports.html';
+        }
+        
+        // Ver localização
+        function viewLocation() {
+            window.location.href = 'geolocation.html';
+        }
+        
+        // Ver registro de horas
+        function viewTimesheet() {
+            alert('Visualizando registro de horas');
+        }
+        
+        // Ver projeto
+        function viewProject() {
+            window.location.href = 'project-management.html';
+        }
+        
+        // Ver detalhes da notificação
+        function viewDetails(id) {
+            alert(`Visualizando detalhes da notificação ${id}`);
+        }
+        
+        // Criar lembrete
+        function createReminder(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const reminderData = {
+                title: formData.get('title'),
+                date: formData.get('date'),
+                time: formData.get('time'),
+                type: formData.get('type'),
+                relatedTo: formData.get('relatedTo'),
+                description: formData.get('description')
+            };
+            
+            // Aqui você enviaria os dados para o servidor
+            console.log('Criando lembrete:', reminderData);
+            
+            // Simulação de sucesso
+            alert('Lembrete criado com sucesso!');
+            event.target.reset();
+            
+            // Preencher data e hora atuais novamente
+            const today = new Date();
+            document.querySelector('input[name="date"]').value = formatDate(today);
+            
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.querySelector('input[name="time"]').value = `${hours}:${minutes}`;
+        }
+        
+        // Editar lembrete
+        function editReminder(id) {
+            alert(`Editando lembrete ${id}`);
+        }
+        
+        // Excluir lembrete
+        function deleteReminder(id) {
+            if (confirm(`Tem certeza que deseja excluir o lembrete ${id}?`)) {
+                alert(`Lembrete ${id} excluído com sucesso`);
+            }
+        }
+        
+        // Salvar configurações
+        function saveSettings() {
+            // Aqui você implementaria a lógica para salvar as configurações
+            alert('Configurações salvas com sucesso!');
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

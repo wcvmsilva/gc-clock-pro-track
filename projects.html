@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Projetos</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .project-form {
+            margin-bottom: var(--spacing-xl);
+            display: none;
+        }
+        
+        .project-form.active {
+            display: block;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .form-grid .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .project-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .project-table {
+            overflow-x: auto;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: rgba(25, 118, 210, 0.1);
+            color: #1976d2;
+        }
+        
+        .status-completed {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .action-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .action-view {
+            color: #1976d2;
+        }
+        
+        .action-edit {
+            color: var(--primary-gold);
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .project-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">Admin Demo</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">Gestão de Projetos</h1>
+            <button id="newProjectBtn" class="btn btn-primary" onclick="toggleProjectForm()">
+                Novo Projeto
+            </button>
+        </div>
+        
+        <section id="projectForm" class="project-form">
+            <div class="card">
+                <h2 class="card-title">Criar Novo Projeto</h2>
+                <form id="createProjectForm" onsubmit="handleCreateProject(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Projeto*</label>
+                            <input type="text" class="form-input" name="projectName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Cliente*</label>
+                            <input type="text" class="form-input" name="client" required>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">Endereço*</label>
+                            <input type="text" class="form-input" name="address" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Data de Início*</label>
+                            <input type="date" class="form-input" name="startDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Data de Término Prevista*</label>
+                            <input type="date" class="form-input" name="endDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Orçamento (R$)*</label>
+                            <input type="number" min="0" step="0.01" class="form-input" name="budget" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="button" class="btn btn-outline" onclick="toggleProjectForm()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Criar Projeto</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+        
+        <div class="project-stats">
+            <div class="card bg-primary">
+                <h3 class="card-title" style="color: white; border-color: var(--primary-gold);">Total de Projetos</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0; color: white;">3</p>
+            </div>
+            
+            <div class="card bg-gold">
+                <h3 class="card-title" style="color: var(--primary-dark); border-color: var(--primary-dark);">Em Andamento</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0; color: var(--primary-dark);">2</p>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Concluídos</h3>
+                <p style="font-size: 2rem; font-weight: 600; margin: 0;">1</p>
+            </div>
+        </div>
+        
+        <section class="project-table">
+            <div class="card">
+                <h2 class="card-title">Projetos</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Cliente</th>
+                            <th>Início</th>
+                            <th>Término</th>
+                            <th>Orçamento</th>
+                            <th>Horas</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Reforma Residencial</td>
+                            <td>Carlos Mendes</td>
+                            <td>15/05/2025</td>
+                            <td>15/06/2025</td>
+                            <td>R$ 15.000,00</td>
+                            <td>32h</td>
+                            <td><span class="status-badge status-active">Em andamento</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-view" onclick="viewProject(1)">Ver</button>
+                                    <button class="action-edit" onclick="editProject(1)">Editar</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Instalação Solar</td>
+                            <td>Maria Johnson</td>
+                            <td>10/05/2025</td>
+                            <td>25/05/2025</td>
+                            <td>R$ 8.500,00</td>
+                            <td>24h</td>
+                            <td><span class="status-badge status-active">Em andamento</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-view" onclick="viewProject(2)">Ver</button>
+                                    <button class="action-edit" onclick="editProject(2)">Editar</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Renovação de Cozinha</td>
+                            <td>Robert Smith</td>
+                            <td>20/04/2025</td>
+                            <td>10/05/2025</td>
+                            <td>R$ 12.000,00</td>
+                            <td>60h</td>
+                            <td><span class="status-badge status-completed">Concluído</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-view" onclick="viewProject(3)">Ver</button>
+                                    <button class="action-edit" onclick="editProject(3)">Editar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Alternar formulário de projeto
+        function toggleProjectForm() {
+            const form = document.getElementById('projectForm');
+            const btn = document.getElementById('newProjectBtn');
+            
+            if (form.classList.contains('active')) {
+                form.classList.remove('active');
+                btn.textContent = 'Novo Projeto';
+            } else {
+                form.classList.add('active');
+                btn.textContent = 'Cancelar';
+                
+                // Preencher data atual e data de término padrão (30 dias depois)
+                const today = new Date();
+                const endDate = new Date();
+                endDate.setDate(today.getDate() + 30);
+                
+                document.querySelector('input[name="startDate"]').value = formatDate(today);
+                document.querySelector('input[name="endDate"]').value = formatDate(endDate);
+            }
+        }
+        
+        // Formatar data para YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Criar projeto
+        function handleCreateProject(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const projectData = {
+                name: formData.get('projectName'),
+                client: formData.get('client'),
+                address: formData.get('address'),
+                startDate: formData.get('startDate'),
+                endDate: formData.get('endDate'),
+                budget: formData.get('budget')
+            };
+            
+            // Aqui você enviaria os dados para o servidor
+            console.log('Criando projeto:', projectData);
+            
+            // Simulação de sucesso
+            alert('Projeto criado com sucesso!');
+            toggleProjectForm();
+            event.target.reset();
+        }
+        
+        // Ver projeto
+        function viewProject(id) {
+            alert(`Visualizando detalhes do projeto ${id}`);
+        }
+        
+        // Editar projeto
+        function editProject(id) {
+            alert(`Editando projeto ${id}`);
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

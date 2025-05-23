@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) var(--spacing-xl);
+        }
+        
+        .header-logo img {
+            height: 50px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        main {
+            flex: 1;
+            padding: var(--spacing-xl);
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .dashboard-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .dashboard-date {
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .stat-card {
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .stat-card h3 {
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .stat-card p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .time-clock-section {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .time-clock-card {
+            text-align: center;
+            padding: var(--spacing-xl);
+        }
+        
+        .time-clock-card h2 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .current-time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .clock-button {
+            padding: var(--spacing-lg) var(--spacing-xl);
+            font-size: 1.25rem;
+            border-radius: 50px;
+            min-width: 200px;
+        }
+        
+        .recent-activity {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .activity-card {
+            overflow: hidden;
+        }
+        
+        .activity-card h2 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .activity-empty {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-dark);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+            
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-clock-card {
+                padding: var(--spacing-lg);
+            }
+            
+            .current-time {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-logo">
+            <img src="images/logo.jpeg" alt="GC Home Improvement">
+        </div>
+        <div class="user-menu">
+            <span class="user-name">John Employee</span>
+            <button class="btn btn-outline" onclick="logout()">Sair</button>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Dashboard</h1>
+            <div class="dashboard-date" id="current-date">Sexta-feira, 23 de Maio de 2025</div>
+        </div>
+        
+        <div class="dashboard-stats">
+            <div class="stat-card bg-primary">
+                <h3>Horas Hoje</h3>
+                <p>0h</p>
+            </div>
+            <div class="stat-card bg-gold">
+                <h3>Horas na Semana</h3>
+                <p>32h</p>
+            </div>
+            <div class="stat-card">
+                <h3>Projetos Ativos</h3>
+                <p>2</p>
+            </div>
+        </div>
+        
+        <section class="time-clock-section">
+            <div class="card time-clock-card">
+                <h2>Registro de Ponto</h2>
+                <div class="current-time" id="clock">12:00:00</div>
+                <button id="clockButton" class="btn btn-primary clock-button" onclick="toggleClock()">
+                    Iniciar Jornada
+                </button>
+            </div>
+        </section>
+        
+        <section class="recent-activity">
+            <div class="card activity-card">
+                <h2>Atividade Recente</h2>
+                <div class="activity-empty">
+                    Nenhuma atividade registrada hoje.
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Atualizar data atual
+        function updateDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            document.getElementById('current-date').textContent = today.toLocaleDateString('pt-BR', options);
+        }
+        
+        // Atualizar relógio
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
+        // Estado do relógio (iniciado ou parado)
+        let clockStarted = false;
+        
+        // Alternar estado do relógio
+        function toggleClock() {
+            const button = document.getElementById('clockButton');
+            
+            if (clockStarted) {
+                button.textContent = 'Iniciar Jornada';
+                button.classList.remove('btn-outline');
+                button.classList.add('btn-primary');
+                clockStarted = false;
+                alert('Jornada finalizada com sucesso!');
+            } else {
+                button.textContent = 'Finalizar Jornada';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-outline');
+                clockStarted = true;
+                alert('Jornada iniciada com sucesso!');
+            }
+        }
+        
+        // Função de logout
+        function logout() {
+            window.location.href = 'index.html';
+        }
+        
+        // Inicializar
+        updateDate();
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
