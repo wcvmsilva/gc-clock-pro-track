@@ -3,114 +3,547 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GC Clock Pro Track - Login</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>GC Clock Pro Track - Dashboard (Standalone)</title>
     <style>
+        :root {
+            --primary-dark: #0F1A20; /* Azul escuro */
+            --primary-gold: #C69C6D; /* Dourado */
+            --background-light: #f8f9fa;
+            --text-dark: #343a40;
+            --text-light: #6c757d;
+            --border-color: #dee2e6;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --border-radius-md: 0.375rem;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
         body {
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
             display: flex;
-            flex-direction: column;
+            min-height: 100vh;
             background-color: var(--background-light);
         }
-        
-        .login-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+
+        #sidebar {
+            width: 250px;
+            background-color: var(--primary-dark);
+            color: white;
             padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
         }
-        
-        .login-card {
-            background-color: var(--background-card);
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--shadow-lg);
-            width: 100%;
-            max-width: 400px;
-            padding: var(--spacing-xl);
+
+        #sidebar.collapsed {
+            width: 80px;
         }
-        
-        .logo-container {
+
+        .sidebar-header {
             text-align: center;
             margin-bottom: var(--spacing-xl);
         }
-        
-        .logo-container img {
-            height: 80px;
-            margin-bottom: var(--spacing-md);
+
+        .sidebar-logo img {
+            height: 50px;
+            max-width: 100%;
+            transition: opacity 0.3s ease;
+        }
+
+        #sidebar.collapsed .sidebar-logo img {
+            opacity: 0;
+            height: 0;
         }
         
-        .logo-container h1 {
-            color: var(--primary-dark);
-            font-size: 1.5rem;
+        .sidebar-logo-icon img {
+             height: 40px;
+             opacity: 0;
+             transition: opacity 0.3s ease;
+        }
+        
+        #sidebar.collapsed .sidebar-logo-icon img {
+            opacity: 1;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
             margin: 0;
+            flex-grow: 1;
         }
-        
-        .logo-container p {
-            color: var(--primary-gold);
-            margin: var(--spacing-xs) 0 0;
+
+        .nav-item {
+            margin-bottom: var(--spacing-sm);
         }
-        
-        .login-form {
-            margin-top: var(--spacing-lg);
-        }
-        
-        .login-form .btn-primary {
-            width: 100%;
+
+        .nav-link {
+            display: flex;
+            align-items: center;
             padding: var(--spacing-md);
-            margin-top: var(--spacing-md);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius-md);
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
         }
         
-        .login-footer {
-            text-align: center;
-            margin-top: var(--spacing-xl);
-            color: var(--text-dark);
-            font-size: 0.875rem;
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(198, 156, 109, 0.2); /* Dourado com transparência */
         }
+
+        .nav-icon {
+            margin-right: var(--spacing-md);
+            font-size: 1.25rem;
+            min-width: 24px; /* Ensure icon space */
+            text-align: center;
+        }
+
+        .nav-text {
+            transition: opacity 0.3s ease;
+        }
+
+        #sidebar.collapsed .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+        }
+
+        #main-content {
+            flex: 1;
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-name {
+            font-weight: 500;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            line-height: 1.5;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-gold);
+            border: 1px solid var(--primary-gold);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+             padding: var(--spacing-md) var(--spacing-lg);
+             font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #b38b60; /* Dourado mais escuro */
+        }
+
+        .card {
+            background-color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 var(--spacing-md);
+            color: var(--primary-dark);
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-md);
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 0 2px rgba(198, 156, 109, 0.25);
+        }
+        
+         .alert {
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        #sidebar-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            align-self: flex-end;
+        }
+        
+        #sidebar.collapsed #sidebar-toggle {
+             align-self: center;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: -250px;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            #sidebar.open {
+                left: 0;
+            }
+            #sidebar.collapsed {
+                width: 0;
+                left: -80px;
+            }
+            #main-content {
+                padding: var(--spacing-lg);
+            }
+            .main-header {
+                 margin-bottom: var(--spacing-lg);
+            }
+            #mobile-menu-button {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: var(--primary-dark);
+            }
+        }
+        
+        @media (min-width: 769px) {
+             #mobile-menu-button {
+                 display: none;
+             }
+        }
+
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card fade-in">
-            <div class="logo-container">
-                <img src="images/logo.jpeg" alt="GC Home Improvement">
-                <h1>GC Clock Pro Track</h1>
-                <p>Sistema de Controle de Horas</p>
+    <aside id="sidebar">
+        <button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                 <img src="https://raw.githubusercontent.com/wcvmsilva/gc-clock-pro-track/main/images/logo.jpeg" alt="GC Home Improvement">
             </div>
-            
-            <div class="login-form">
-                <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-input" placeholder="seu@email.com" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password" class="form-label">Senha</label>
-                    <input type="password" id="password" class="form-input" placeholder="••••••••" required>
-                </div>
-                
-                <button type="button" class="btn btn-primary" onclick="handleLogin()">Entrar</button>
-            </div>
-            
-            <div class="login-footer">
-                <p>&copy; 2025 GC Home Improvement. Todos os direitos reservados.</p>
+             <div class="sidebar-logo-icon">
+                 <img src="https://raw.githubusercontent.com/wcvmsilva/gc-clock-pro-track/main/images/logo.jpeg" alt="GC Icon" style="height: 40px;">
             </div>
         </div>
-    </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#dashboard" class="nav-link active" onclick="navigateTo(\'dashboard\')">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#reports" class="nav-link" onclick="navigateTo(\'reports\')">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Relatórios</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#geolocation" class="nav-link" onclick="navigateTo(\'geolocation\')">
+                    <span class="nav-icon">📍</span>
+                    <span class="nav-text">Geolocalização</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#projects" class="nav-link" onclick="navigateTo(\'projects\')">
+                    <span class="nav-icon">🏗️</span>
+                    <span class="nav-text">Projetos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#notifications" class="nav-link" onclick="navigateTo(\'notifications\')">
+                    <span class="nav-icon">🔔</span>
+                    <span class="nav-text">Notificações</span>
+                </a>
+            </li>
+             <li class="nav-item">
+                <a href="#user-registration" class="nav-link" onclick="navigateTo(\'user-registration\')">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">Cadastrar Usuário</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+             <a href="#logout" class="nav-link" onclick="logout()">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sair</span>
+            </a>
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <header class="main-header">
+             <button id="mobile-menu-button" onclick="toggleSidebarMobile()">☰</button>
+            <h1 class="page-title" id="page-title-header">Dashboard</h1>
+            <div class="user-menu">
+                <span class="user-name">Admin Demo</span>
+                <!-- Botão de Sair movido para o rodapé da sidebar -->
+            </div>
+        </header>
+
+        <!-- Conteúdo das Páginas (será carregado dinamicamente ou mostrado/ocultado) -->
+        <section id="dashboard-content" class="page-content active">
+            <div class="card">
+                <h2 class="card-title">Registro de Ponto</h2>
+                <p>Simulação do botão de registro de ponto.</p>
+                <button class="btn btn-primary" style="width: 100%; max-width: 300px; margin: auto; display: block;">Registrar Entrada</button>
+            </div>
+             <div class="card">
+                <h2 class="card-title">Estatísticas Rápidas</h2>
+                <p>Simulação de estatísticas.</p>
+            </div>
+        </section>
+
+        <section id="reports-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Relatórios Detalhados</h2>
+                <p>Conteúdo da página de relatórios aqui...</p>
+                 <p>Filtros: Funcionário, Projeto, Período, Localização</p>
+                 <p>Gráficos de Barras</p>
+                 <button class="btn btn-outline">Exportar PDF</button>
+                 <button class="btn btn-outline">Exportar Excel</button>
+            </div>
+        </section>
+
+        <section id="geolocation-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Geolocalização</h2>
+                <p>Conteúdo da página de geolocalização aqui...</p>
+                <p>Mapa, Histórico, Cercas Virtuais</p>
+            </div>
+        </section>
+
+        <section id="projects-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Gestão de Projetos</h2>
+                <p>Conteúdo da página de gestão de projetos aqui...</p>
+                <p>Cadastro, Documentos, Materiais, Marcos, Equipe, Gantt</p>
+            </div>
+        </section>
+
+        <section id="notifications-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Notificações e Lembretes</h2>
+                <p>Conteúdo da página de notificações aqui...</p>
+            </div>
+        </section>
+        
+        <section id="user-registration-content" class="page-content" style="display: none;">
+             <div class="card">
+                 <h2 class="card-title">Cadastro de Novo Funcionário</h2>
+                 <form id="registration-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Nome Completo*</label>
+                        <input type="text" id="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email*</label>
+                        <input type="email" id="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Senha*</label>
+                        <input type="password" id="password" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hourly_rate" class="form-label">Valor por Hora (USD)*</label>
+                        <input type="number" id="hourly_rate" class="form-input" step="0.01" min="0" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar Funcionário</button>
+                </form>
+                <div id="message-area"></div>
+             </div>
+        </section>
+
+    </main>
 
     <script>
-        function handleLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            // Credenciais de demonstração
-            if ((email === 'admin.demo@gchome.com' && password === 'admin123') || 
-                (email === 'john@gchome.com' && password === 'password')) {
-                window.location.href = 'dashboard.html';
-            } else {
-                alert('Email ou senha incorretos. Por favor, tente novamente.');
-            }
+        const sidebar = document.getElementById(\'sidebar\');
+        const mainContent = document.getElementById(\'main-content\');
+        const pageTitleHeader = document.getElementById(\'page-title-header\');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle(\'collapsed\');
         }
+        
+         function toggleSidebarMobile() {
+            sidebar.classList.toggle(\'open\');
+        }
+
+        function navigateTo(pageId) {
+            // Oculta todas as seções de conteúdo
+            document.querySelectorAll(\'#main-content .page-content\').forEach(section => {
+                section.style.display = \'none\';
+                section.classList.remove(\'active\');
+            });
+
+            // Mostra a seção selecionada
+            const targetSection = document.getElementById(`${pageId}-content`);
+            if (targetSection) {
+                targetSection.style.display = \'block\';
+                targetSection.classList.add(\'active\');
+            }
+            
+            // Atualiza o título da página
+            const linkText = document.querySelector(`.nav-link[onclick="navigateTo(\'${pageId}\')"] .nav-text`).textContent;
+             pageTitleHeader.textContent = linkText;
+
+            // Atualiza o link ativo na sidebar
+            document.querySelectorAll(\'#sidebar .nav-link\').forEach(link => {
+                link.classList.remove(\'active\');
+            });
+            document.querySelector(`.nav-link[onclick="navigateTo(\'${pageId}\')"]`).classList.add(\'active\');
+            
+            // Fecha a sidebar no mobile após clicar
+            if (window.innerWidth <= 768) {
+                 sidebar.classList.remove(\'open\');
+            }
+            
+             // Previne o comportamento padrão do link (não necessário com onclick)
+             event.preventDefault();
+        }
+
+        function logout() {
+            // Em um sistema real, você invalidaria a sessão/token
+            alert(\'Você foi desconectado (simulação).\');
+            // Redireciona para uma página de login (simulada aqui)
+            // window.location.href = \'index.html\'; 
+            // Como é standalone, apenas mostra um alerta
+        }
+        
+         function handleRegister(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            const name = document.getElementById(\'name\').value;
+            const email = document.getElementById(\'email\').value;
+            const password = document.getElementById(\'password\').value;
+            const hourlyRate = document.getElementById(\'hourly_rate\').value;
+            const messageArea = document.getElementById(\'message-area\');
+
+            // Limpa mensagens anteriores
+            messageArea.innerHTML = \'\';
+
+            // Validação simples (pode ser expandida)
+            if (!name || !email || !password || !hourlyRate) {
+                showMessage(\'Por favor, preencha todos os campos obrigatórios.\', \'error\');
+                return;
+            }
+
+            // Simulação de cadastro (sem backend real)
+            console.log(\'--- Dados do Novo Funcionário ---\' + `\nNome: ${name}\nEmail: ${email}\nSenha: [oculta]\nValor/Hora: ${hourlyRate}\n---------------------------------`);
+
+            // Exibe mensagem de sucesso
+            showMessage(`Funcionário ${name} cadastrado com sucesso (simulação).`, \'success\');
+
+            // Limpa o formulário
+            document.getElementById(\'registration-form\').reset();
+        }
+
+        function showMessage(message, type) {
+            const messageArea = document.getElementById(\'message-area\');
+            const alertDiv = document.createElement(\'div\');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            // Limpa mensagens anteriores antes de adicionar a nova
+            messageArea.innerHTML = \'\'; 
+            messageArea.appendChild(alertDiv);
+
+            // Remove a mensagem após 5 segundos
+            setTimeout(() => {
+                // Verifica se o elemento ainda existe antes de remover
+                if (alertDiv.parentNode === messageArea) {
+                     messageArea.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        // Inicializa a página no Dashboard
+        document.addEventListener(\'DOMContentLoaded\', () => {
+            navigateTo(\'dashboard\');
+        });
+
     </script>
 </body>
 </html>

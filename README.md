@@ -1,54 +1,43 @@
 # GC Clock Pro Track
 
-Um aplicativo web para controle de horas trabalhadas, geolocalização e gerenciamento de funcionários para a GC Home Improvements LLC.
+Sistema de controle de horas trabalhadas para GC Home Improvement.
 
-## Funcionalidades
+## Visão Geral
 
-- Registro de horas com um clique
-- Captura automática de geolocalização
-- Upload de fotos do local de trabalho
-- Gerenciamento de valores por hora para cada funcionário
-- Cálculo automático de valores com base nas horas trabalhadas
-- Relatórios diários e semanais
+O GC Clock Pro Track é um sistema completo para controle de horas trabalhadas, geolocalização, gestão de projetos e relatórios detalhados. Este sistema foi desenvolvido especificamente para atender às necessidades da GC Home Improvement, incorporando sua identidade visual e fluxos de trabalho.
 
-## Acesso
+## Funcionalidades Principais
 
-O aplicativo está disponível em: [https://[seu-usuario].github.io/gc-clock-pro-track](https://[seu-usuario].github.io/gc-clock-pro-track)
+- **Dashboard Administrativo**: Visão geral de todas as atividades
+- **Registro de Ponto**: Controle de entrada e saída de funcionários
+- **Relatórios Detalhados**: Análise de horas trabalhadas com filtros avançados
+- **Geolocalização**: Mapa em tempo real com localização dos funcionários
+- **Gestão de Projetos**: Acompanhamento de projetos, materiais e equipes
+- **Cadastro de Usuários**: Interface para administradores adicionarem novos funcionários
+- **Sistema de Notificações**: Alertas e lembretes para eventos importantes
+
+## Como Usar
+
+1. Abra o arquivo `index.html` em seu navegador
+2. Faça login com as credenciais de administrador
+3. Navegue pelo menu lateral para acessar as diferentes funcionalidades
+4. Use o botão de logoff para sair do sistema quando necessário
 
 ## Credenciais de Demonstração
 
-- **Admin:** admin.demo@gchome.com / senha: admin123
-- **Funcionário:** john@gchome.com / senha: password
+- **Admin**: admin.demo@gchome.com / senha: admin123
+- **Funcionário**: john@gchome.com / senha: password
 
-## Configuração para Domínio Personalizado
+## Requisitos Técnicos
 
-Para configurar o aplicativo para usar seu domínio personalizado (gchomeimprovementsc.com), siga as instruções na seção [Configuração de Domínio](#configuração-de-domínio).
+- Navegador web moderno (Chrome, Firefox, Safari, Edge)
+- Conexão com internet para recursos de geolocalização
+- Permissões de localização ativadas para funcionalidades de mapa
 
-## Tecnologias Utilizadas
+## Suporte
 
-- Next.js
-- React
-- Tailwind CSS
-- Supabase (mock para versão estática)
+Para qualquer dúvida ou suporte técnico, entre em contato com a equipe de desenvolvimento.
 
-## Configuração de Domínio
+---
 
-Para configurar o aplicativo para usar seu domínio personalizado:
-
-1. Crie um arquivo CNAME na raiz do repositório com o conteúdo:
-   ```
-   app.gchomeimprovementsc.com
-   ```
-
-2. Configure seu provedor de DNS (Hostinger) para apontar o subdomínio para o GitHub Pages:
-   - Adicione um registro CNAME para `app.gchomeimprovementsc.com` apontando para `[seu-usuario].github.io`
-
-3. Nas configurações do repositório GitHub, em "Pages", ative a opção "Custom domain" e insira `app.gchomeimprovementsc.com`
-
-4. Aguarde a propagação do DNS (pode levar até 24 horas)
-
-## Contato
-
-Para suporte ou dúvidas, entre em contato com o desenvolvedor.
-
-© 2025 GC Home Improvements LLC. Todos os direitos reservados.
+Desenvolvido para GC Home Improvement © 2025

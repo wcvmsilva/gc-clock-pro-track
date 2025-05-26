@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GC Clock Pro Track - Assistente Inteligente</title>
+    <style>
+        :root {
+            --primary-dark: #0F1A20; /* Azul escuro */
+            --primary-gold: #C69C6D; /* Dourado */
+            --background-light: #f8f9fa;
+            --text-dark: #343a40;
+            --text-light: #6c757d;
+            --border-color: #dee2e6;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --border-radius-md: 0.375rem;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--background-light);
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: var(--primary-dark);
+            color: white;
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+
+        #sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .sidebar-logo img {
+            height: 50px;
+            max-width: 100%;
+            transition: opacity 0.3s ease;
+        }
+
+        #sidebar.collapsed .sidebar-logo img {
+            opacity: 0;
+            height: 0;
+        }
+        
+        .sidebar-logo-icon img {
+             height: 40px;
+             opacity: 0;
+             transition: opacity 0.3s ease;
+        }
+        
+        #sidebar.collapsed .sidebar-logo-icon img {
+            opacity: 1;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-md);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius-md);
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(198, 156, 109, 0.2); /* Dourado com transparência */
+        }
+
+        .nav-icon {
+            margin-right: var(--spacing-md);
+            font-size: 1.25rem;
+            min-width: 24px; /* Ensure icon space */
+            text-align: center;
+        }
+
+        .nav-text {
+            transition: opacity 0.3s ease;
+        }
+
+        #sidebar.collapsed .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+        }
+
+        #main-content {
+            flex: 1;
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--primary-dark);
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-name {
+            font-weight: 500;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            line-height: 1.5;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-gold);
+            border: 1px solid var(--primary-gold);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+             padding: var(--spacing-md) var(--spacing-lg);
+             font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #b38b60; /* Dourado mais escuro */
+        }
+
+        .card {
+            background-color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 var(--spacing-md);
+            color: var(--primary-dark);
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-md);
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 0 2px rgba(198, 156, 109, 0.25);
+        }
+        
+         .alert {
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        #sidebar-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            align-self: flex-end;
+        }
+        
+        #sidebar.collapsed #sidebar-toggle {
+             align-self: center;
+        }
+
+        /* Estilos específicos para o assistente */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+        }
+
+        .message {
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message-user {
+            justify-content: flex-end;
+        }
+
+        .message-assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
+        }
+
+        .message-user .message-content {
+            background-color: var(--primary-dark);
+            color: white;
+            border-top-right-radius: 0;
+        }
+
+        .message-assistant .message-content {
+            background-color: #f1f1f1;
+            color: var(--text-dark);
+            border-top-left-radius: 0;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            margin-right: var(--spacing-md);
+        }
+
+        .chat-input button {
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .dashboard-card {
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .dashboard-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+
+        .dashboard-card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(198, 156, 109, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-gold);
+            font-size: 1.25rem;
+        }
+
+        .dashboard-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: var(--spacing-sm) 0;
+        }
+
+        .dashboard-card-description {
+            color: var(--text-light);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .assistant-suggestions {
+            margin-top: var(--spacing-xl);
+        }
+
+        .suggestion-card {
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border-left: 4px solid var(--primary-gold);
+        }
+
+        .suggestion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 0 0 var(--spacing-sm);
+        }
+
+        .suggestion-content {
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: -250px;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            #sidebar.open {
+                left: 0;
+            }
+            #sidebar.collapsed {
+                width: 0;
+                left: -80px;
+            }
+            #main-content {
+                padding: var(--spacing-lg);
+            }
+            .main-header {
+                 margin-bottom: var(--spacing-lg);
+            }
+            #mobile-menu-button {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: var(--primary-dark);
+            }
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (min-width: 769px) {
+             #mobile-menu-button {
+                 display: none;
+             }
+        }
+
+    </style>
+</head>
+<body>
+    <aside id="sidebar">
+        <button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                 <img src="https://raw.githubusercontent.com/wcvmsilva/gc-clock-pro-track/main/images/logo.jpeg" alt="GC Home Improvement">
+            </div>
+             <div class="sidebar-logo-icon">
+                 <img src="https://raw.githubusercontent.com/wcvmsilva/gc-clock-pro-track/main/images/logo.jpeg" alt="GC Icon" style="height: 40px;">
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#dashboard" class="nav-link" onclick="navigateTo('dashboard')">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#reports" class="nav-link" onclick="navigateTo('reports')">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Relatórios</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#geolocation" class="nav-link" onclick="navigateTo('geolocation')">
+                    <span class="nav-icon">📍</span>
+                    <span class="nav-text">Geolocalização</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#projects" class="nav-link" onclick="navigateTo('projects')">
+                    <span class="nav-icon">🏗️</span>
+                    <span class="nav-text">Projetos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#notifications" class="nav-link" onclick="navigateTo('notifications')">
+                    <span class="nav-icon">🔔</span>
+                    <span class="nav-text">Notificações</span>
+                </a>
+            </li>
+             <li class="nav-item">
+                <a href="#user-registration" class="nav-link" onclick="navigateTo('user-registration')">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">Cadastrar Usuário</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#assistant" class="nav-link active" onclick="navigateTo('assistant')">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-text">Assistente IA</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+             <a href="#logout" class="nav-link" onclick="logout()">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sair</span>
+            </a>
+        </div>
+    </aside>
+
+    <main id="main-content">
+        <header class="main-header">
+             <button id="mobile-menu-button" onclick="toggleSidebarMobile()">☰</button>
+            <h1 class="page-title" id="page-title-header">Assistente Inteligente</h1>
+            <div class="user-menu">
+                <span class="user-name">Admin Demo</span>
+            </div>
+        </header>
+
+        <!-- Conteúdo das Páginas -->
+        <section id="assistant-content" class="page-content active">
+            <div class="dashboard-cards">
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h3 class="dashboard-card-title">Produtividade Média</h3>
+                        <div class="dashboard-card-icon">⏱️</div>
+                    </div>
+                    <div class="dashboard-card-value">87%</div>
+                    <p class="dashboard-card-description">Aumento de 5% em relação ao mês anterior</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h3 class="dashboard-card-title">Projetos Ativos</h3>
+                        <div class="dashboard-card-icon">🏗️</div>
+                    </div>
+                    <div class="dashboard-card-value">8</div>
+                    <p class="dashboard-card-description">2 projetos concluídos este mês</p>
+                </div>
+                <div class="dashboard-card">
+                    <div class="dashboard-card-header">
+                        <h3 class="dashboard-card-title">Horas Registradas</h3>
+                        <div class="dashboard-card-icon">📊</div>
+                    </div>
+                    <div class="dashboard-card-value">342</div>
+                    <p class="dashboard-card-description">Nesta semana (12% acima da média)</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">Assistente Inteligente GC Clock Pro</h2>
+                <p>Faça perguntas sobre seus projetos, equipe e desempenho para obter insights valiosos.</p>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message message-assistant">
+                            <div class="message-content">
+                                <p>Olá, Admin! Sou o Assistente Inteligente do GC Clock Pro Track. Como posso ajudá-lo hoje?</p>
+                                <p>Você pode me perguntar sobre:</p>
+                                <ul>
+                                    <li>Análise de desempenho de projetos</li>
+                                    <li>Produtividade da equipe</li>
+                                    <li>Recomendações de treinamento</li>
+                                    <li>Otimização de recursos</li>
+                                    <li>Tendências e previsões</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="user-input" placeholder="Digite sua pergunta aqui..." onkeypress="handleKeyPress(event)">
+                        <button onclick="sendMessage()">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="assistant-suggestions">
+                <h2 class="page-title" style="font-size: 1.5rem; margin-bottom: var(--spacing-lg);">Insights e Recomendações</h2>
+                
+                <div class="suggestion-card">
+                    <h3 class="suggestion-title">Oportunidade de Otimização de Recursos</h3>
+                    <div class="suggestion-content">
+                        <p>Identifiquei que o Projeto Renovação Casa Johnson está utilizando 30% mais horas que o estimado na fase de acabamento. Uma análise dos registros mostra que a equipe está enfrentando dificuldades com as novas técnicas de pintura texturizada.</p>
+                        <p><strong>Recomendação:</strong> Considere realizar um treinamento específico sobre técnicas de pintura texturizada para a equipe designada a este projeto. Isso pode reduzir o tempo de execução em até 25% e melhorar a qualidade do acabamento.</p>
+                    </div>
+                    <div class="suggestion-actions">
+                        <button class="btn btn-outline" onclick="implementRecommendation(1)">Implementar</button>
+                        <button class="btn btn-outline" style="opacity: 0.7;" onclick="dismissRecommendation(1)">Descartar</button>
+                    </div>
+                </div>
+
+                <div class="suggestion-card">
+                    <h3 class="suggestion-title">Alerta de Desvio de Cronograma</h3>
+                    <div class="suggestion-content">
+                        <p>O Projeto Reforma Comercial Plaza está atualmente 4 dias atrasado em relação ao cronograma previsto. Se o ritmo atual continuar, a data de entrega será comprometida em aproximadamente 10 dias.</p>
+                        <p><strong>Recomendação:</strong> Realoque temporariamente 2 funcionários da equipe do Projeto Residencial Parkview (que está 3 dias adiantado) para acelerar as atividades críticas do Projeto Plaza.</p>
+                    </div>
+                    <div class="suggestion-actions">
+                        <button class="btn btn-outline" onclick="implementRecommendation(2)">Implementar</button>
+                        <button class="btn btn-outline" style="opacity: 0.7;" onclick="dismissRecommendation(2)">Descartar</button>
+                    </div>
+                </div>
+
+                <div class="suggestion-card">
+                    <h3 class="suggestion-title">Oportunidade de Desenvolvimento de Equipe</h3>
+                    <div class="suggestion-content">
+                        <p>Análise dos últimos 3 meses mostra que 5 funcionários apresentam tempos consistentemente acima da média em atividades de instalação elétrica, impactando a eficiência geral dos projetos.</p>
+                        <p><strong>Recomendação:</strong> Organize um workshop de 4 horas sobre técnicas avançadas de instalação elétrica. O investimento estimado de $1,200 pode resultar em economia de aproximadamente $4,800 nos próximos 6 meses.</p>
+                    </div>
+                    <div class="suggestion-actions">
+                        <button class="btn btn-outline" onclick="implementRecommendation(3)">Implementar</button>
+                        <button class="btn btn-outline" style="opacity: 0.7;" onclick="dismissRecommendation(3)">Descartar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const pageTitleHeader = document.getElementById('page-title-header');
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+        }
+        
+        function toggleSidebarMobile() {
+            sidebar.classList.toggle('open');
+        }
+
+        function navigateTo(pageId) {
+            // Oculta todas as seções de conteúdo
+            document.querySelectorAll('#main-content .page-content').forEach(section => {
+                section.style.display = 'none';
+                section.classList.remove('active');
+            });
+
+            // Mostra a seção selecionada
+            const targetSection = document.getElementById(`${pageId}-content`);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+                targetSection.classList.add('active');
+            }
+            
+            // Atualiza o título da página
+            const linkText = document.querySelector(`.nav-link[onclick="navigateTo('${pageId}')"] .nav-text`).textContent;
+            pageTitleHeader.textContent = linkText;
+
+            // Atualiza o link ativo na sidebar
+            document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`.nav-link[onclick="navigateTo('${pageId}')"]`).classList.add('active');
+            
+            // Fecha a sidebar no mobile após clicar
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
+            
+            // Previne o comportamento padrão do link
+            event.preventDefault();
+        }
+
+        function logout() {
+            alert('Você foi desconectado (simulação).');
+        }
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+            
+            // Adiciona a mensagem do usuário ao chat
+            addUserMessage(message);
+            
+            // Limpa o campo de entrada
+            userInput.value = '';
+            
+            // Simula resposta do assistente após um pequeno delay
+            setTimeout(() => {
+                const response = getAssistantResponse(message);
+                addAssistantMessage(response);
+            }, 1000);
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-user';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = text;
+            
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Rola para a mensagem mais recente
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addAssistantMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-assistant';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = text;
+            
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Rola para a mensagem mais recente
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function getAssistantResponse(message) {
+            // Respostas simuladas baseadas em palavras-chave na mensagem do usuário
+            const messageLower = message.toLowerCase();
+            
+            if (messageLower.includes('projeto') && messageLower.includes('johnson')) {
+                return `<p>O Projeto Renovação Casa Johnson está atualmente com as seguintes métricas:</p>
+                        <ul>
+                            <li>Progresso: 65% concluído (5% abaixo do planejado)</li>
+                            <li>Orçamento: 15% acima do previsto</li>
+                            <li>Cronograma: 3 dias de atraso</li>
+                        </ul>
+                        <p>A análise dos dados mostra que a fase de acabamento está consumindo mais horas que o estimado, principalmente devido a dificuldades com as novas técnicas de pintura texturizada.</p>
+                        <p>Recomendo:</p>
+                        <ol>
+                            <li>Realizar um treinamento rápido sobre técnicas de pintura texturizada</li>
+                            <li>Revisar as estimativas para as próximas etapas</li>
+                            <li>Considerar a alocação de um especialista em acabamento por 2 dias</li>
+                        </ol>`;
+            } else if (messageLower.includes('produtividade') && messageLower.includes('equipe')) {
+                return `<p>A produtividade geral da equipe nos últimos 30 dias está em 87%, um aumento de 5% em relação ao mês anterior.</p>
+                        <p>Destaques:</p>
+                        <ul>
+                            <li>Funcionários mais produtivos: Carlos Silva (96%), Maria Oliveira (94%), João Santos (92%)</li>
+                            <li>Áreas com melhor desempenho: Instalação de drywall, Pintura básica, Instalação de pisos</li>
+                            <li>Áreas com oportunidade de melhoria: Instalação elétrica, Acabamento fino, Pintura texturizada</li>
+                        </ul>
+                        <p>Recomendo focar em treinamentos específicos para as áreas de oportunidade identificadas, o que pode elevar a produtividade geral para mais de 90%.</p>`;
+            } else if (messageLower.includes('treinamento') || messageLower.includes('capacitação')) {
+                return `<p>Baseado na análise dos dados de desempenho dos últimos 3 meses, recomendo os seguintes treinamentos prioritários:</p>
+                        <ol>
+                            <li><strong>Técnicas avançadas de instalação elétrica</strong> - 5 funcionários apresentam tempos consistentemente acima da média nesta atividade</li>
+                            <li><strong>Acabamento fino e detalhes</strong> - Esta área representa 20% dos retrabalhos registrados</li>
+                            <li><strong>Técnicas de pintura texturizada</strong> - Impactando especialmente o Projeto Johnson</li>
+                        </ol>
+                        <p>O investimento estimado nestes treinamentos é de $3,600, com potencial retorno de $12,000 em economia de tempo e redução de retrabalho nos próximos 6 meses.</p>`;
+            } else if (messageLower.includes('recursos') || messageLower.includes('alocação')) {
+                return `<p>Atualmente, a distribuição de recursos entre os 8 projetos ativos não está otimizada. Identifiquei as seguintes oportunidades:</p>
+                        <ul>
+                            <li>O Projeto Residencial Parkview está 3 dias adiantado e tem 2 funcionários que poderiam ser realocados temporariamente</li>
+                            <li>O Projeto Reforma Comercial Plaza está 4 dias atrasado e precisa de reforço na equipe</li>
+                            <li>Há sobreposição de especialistas em acabamento em 3 projetos, enquanto faltam em 2 outros</li>
+                        </ul>
+                        <p>Recomendo uma redistribuição estratégica conforme detalhado no relatório de otimização que posso gerar para você.</p>`;
+            } else if (messageLower.includes('tendência') || messageLower.includes('previsão')) {
+                return `<p>Baseado nos dados históricos e nos projetos atuais, as tendências para os próximos 3 meses indicam:</p>
+                        <ul>
+                            <li>Aumento de 15% na demanda por serviços de renovação residencial</li>
+                            <li>Pico de atividade previsto para o início do próximo mês</li>
+                            <li>Possível escassez de mão de obra especializada em instalações elétricas</li>
+                            <li>Oportunidade de expansão no segmento de reformas comerciais de pequeno porte</li>
+                        </ul>
+                        <p>Recomendo iniciar o recrutamento de eletricistas adicionais e considerar parcerias estratégicas para atender à demanda crescente.</p>`;
+            } else {
+                return `<p>Entendi sua pergunta sobre "${message}". Para fornecer uma análise mais precisa, preciso de algumas informações adicionais:</p>
+                        <ul>
+                            <li>Qual período específico você gostaria de analisar?</li>
+                            <li>Está interessado em algum projeto ou funcionário específico?</li>
+                            <li>Há algum aspecto particular que gostaria de focar (produtividade, custos, qualidade)?</li>
+                        </ul>
+                        <p>Você também pode experimentar perguntas como:</p>
+                        <ul>
+                            <li>"Como está o desempenho do Projeto Johnson?"</li>
+                            <li>"Qual a produtividade da equipe este mês?"</li>
+                            <li>"Quais treinamentos são recomendados para minha equipe?"</li>
+                            <li>"Como otimizar a alocação de recursos nos projetos atuais?"</li>
+                        </ul>`;
+            }
+        }
+        
+        function implementRecommendation(id) {
+            alert(`Recomendação #${id} implementada com sucesso! (Simulação)`);
+            document.querySelectorAll('.suggestion-card')[id-1].style.opacity = '0.5';
+            document.querySelectorAll('.suggestion-card')[id-1].querySelector('.suggestion-actions').innerHTML = '<span style="color: var(--primary-gold); font-weight: 500;">✓ Implementado</span>';
+        }
+        
+        function dismissRecommendation(id) {
+            alert(`Recomendação #${id} descartada. (Simulação)`);
+            document.querySelectorAll('.suggestion-card')[id-1].style.display = 'none';
+        }
+
+        // Inicializa a página no Assistente
+        document.addEventListener('DOMContentLoaded', () => {
+            navigateTo('assistant');
+        });
+    </script>
+</body>
+</html>
