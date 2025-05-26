@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GC Clock Pro Track - Assistente Inteligente</title>
+    <title>GC Clock Pro Track - Dashboard</title>
     <style>
         :root {
             --primary-dark: #0F1A20; /* Azul escuro */
@@ -258,171 +258,6 @@
              align-self: center;
         }
 
-        /* Estilos específicos para o assistente */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 200px);
-            background-color: white;
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--shadow-sm);
-            overflow: hidden;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: var(--spacing-lg);
-        }
-
-        .message {
-            margin-bottom: var(--spacing-md);
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .message-user {
-            justify-content: flex-end;
-        }
-
-        .message-assistant {
-            justify-content: flex-start;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: var(--spacing-md);
-            border-radius: var(--border-radius-md);
-        }
-
-        .message-user .message-content {
-            background-color: var(--primary-dark);
-            color: white;
-            border-top-right-radius: 0;
-        }
-
-        .message-assistant .message-content {
-            background-color: #f1f1f1;
-            color: var(--text-dark);
-            border-top-left-radius: 0;
-        }
-
-        .chat-input {
-            display: flex;
-            padding: var(--spacing-md);
-            border-top: 1px solid var(--border-color);
-            background-color: white;
-        }
-
-        .chat-input input {
-            flex: 1;
-            padding: var(--spacing-md);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            margin-right: var(--spacing-md);
-        }
-
-        .chat-input button {
-            background-color: var(--primary-gold);
-            color: var(--primary-dark);
-            border: none;
-            border-radius: var(--border-radius-md);
-            padding: var(--spacing-md) var(--spacing-lg);
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .dashboard-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-        }
-
-        .dashboard-card {
-            background-color: white;
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--shadow-sm);
-            padding: var(--spacing-lg);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .dashboard-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-md);
-        }
-
-        .dashboard-card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-dark);
-            margin: 0;
-        }
-
-        .dashboard-card-icon {
-            width: 40px;
-            height: 40px;
-            background-color: rgba(198, 156, 109, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary-gold);
-            font-size: 1.25rem;
-        }
-
-        .dashboard-card-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary-dark);
-            margin: var(--spacing-sm) 0;
-        }
-
-        .dashboard-card-description {
-            color: var(--text-light);
-            margin: 0;
-            font-size: 0.9rem;
-        }
-
-        .chart-container {
-            width: 100%;
-            height: 300px;
-            margin-bottom: var(--spacing-xl);
-        }
-
-        .assistant-suggestions {
-            margin-top: var(--spacing-xl);
-        }
-
-        .suggestion-card {
-            background-color: white;
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--shadow-sm);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-lg);
-            border-left: 4px solid var(--primary-gold);
-        }
-
-        .suggestion-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary-dark);
-            margin: 0 0 var(--spacing-sm);
-        }
-
-        .suggestion-content {
-            color: var(--text-dark);
-            margin-bottom: var(--spacing-md);
-        }
-
-        .suggestion-actions {
-            display: flex;
-            gap: var(--spacing-md);
-        }
-
         @media (max-width: 768px) {
             #sidebar {
                 position: fixed;
@@ -452,9 +287,6 @@
                 cursor: pointer;
                 color: var(--primary-dark);
             }
-            .dashboard-cards {
-                grid-template-columns: 1fr;
-            }
         }
         
         @media (min-width: 769px) {
@@ -478,7 +310,7 @@
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
-                <a href="#dashboard" class="nav-link" onclick="navigateTo('dashboard')">
+                <a href="#dashboard" class="nav-link active" onclick="navigateTo('dashboard')">
                     <span class="nav-icon">🏠</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
@@ -513,8 +345,9 @@
                     <span class="nav-text">Cadastrar Usuário</span>
                 </a>
             </li>
+            <!-- Adicionado o link para o Assistente IA -->
             <li class="nav-item">
-                <a href="#assistant" class="nav-link active" onclick="navigateTo('assistant')">
+                <a href="assistente-ia.html" class="nav-link">
                     <span class="nav-icon">🤖</span>
                     <span class="nav-text">Assistente IA</span>
                 </a>
@@ -531,116 +364,93 @@
     <main id="main-content">
         <header class="main-header">
              <button id="mobile-menu-button" onclick="toggleSidebarMobile()">☰</button>
-            <h1 class="page-title" id="page-title-header">Assistente Inteligente</h1>
+            <h1 class="page-title" id="page-title-header">Dashboard</h1>
             <div class="user-menu">
                 <span class="user-name">Admin Demo</span>
+                <!-- Botão de Sair movido para o rodapé da sidebar -->
             </div>
         </header>
 
-        <!-- Conteúdo das Páginas -->
-        <section id="assistant-content" class="page-content active">
-            <div class="dashboard-cards">
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">Produtividade Média</h3>
-                        <div class="dashboard-card-icon">⏱️</div>
-                    </div>
-                    <div class="dashboard-card-value">87%</div>
-                    <p class="dashboard-card-description">Aumento de 5% em relação ao mês anterior</p>
-                </div>
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">Projetos Ativos</h3>
-                        <div class="dashboard-card-icon">🏗️</div>
-                    </div>
-                    <div class="dashboard-card-value">8</div>
-                    <p class="dashboard-card-description">2 projetos concluídos este mês</p>
-                </div>
-                <div class="dashboard-card">
-                    <div class="dashboard-card-header">
-                        <h3 class="dashboard-card-title">Horas Registradas</h3>
-                        <div class="dashboard-card-icon">📊</div>
-                    </div>
-                    <div class="dashboard-card-value">342</div>
-                    <p class="dashboard-card-description">Nesta semana (12% acima da média)</p>
-                </div>
-            </div>
-
+        <!-- Conteúdo das Páginas (será carregado dinamicamente ou mostrado/ocultado) -->
+        <section id="dashboard-content" class="page-content active">
             <div class="card">
-                <h2 class="card-title">Assistente Inteligente GC Clock Pro</h2>
-                <p>Faça perguntas sobre seus projetos, equipe e desempenho para obter insights valiosos.</p>
-                
-                <div class="chat-container">
-                    <div class="chat-messages" id="chat-messages">
-                        <div class="message message-assistant">
-                            <div class="message-content">
-                                <p>Olá, Admin! Sou o Assistente Inteligente do GC Clock Pro Track. Como posso ajudá-lo hoje?</p>
-                                <p>Você pode me perguntar sobre:</p>
-                                <ul>
-                                    <li>Análise de desempenho de projetos</li>
-                                    <li>Produtividade da equipe</li>
-                                    <li>Recomendações de treinamento</li>
-                                    <li>Otimização de recursos</li>
-                                    <li>Tendências e previsões</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-input">
-                        <input type="text" id="user-input" placeholder="Digite sua pergunta aqui..." onkeypress="handleKeyPress(event)">
-                        <button onclick="sendMessage()">Enviar</button>
-                    </div>
-                </div>
+                <h2 class="card-title">Registro de Ponto</h2>
+                <p>Simulação do botão de registro de ponto.</p>
+                <button class="btn btn-primary" style="width: 100%; max-width: 300px; margin: auto; display: block;">Registrar Entrada</button>
             </div>
-
-            <div class="assistant-suggestions">
-                <h2 class="page-title" style="font-size: 1.5rem; margin-bottom: var(--spacing-lg);">Insights e Recomendações</h2>
-                
-                <div class="suggestion-card">
-                    <h3 class="suggestion-title">Oportunidade de Otimização de Recursos</h3>
-                    <div class="suggestion-content">
-                        <p>Identifiquei que o Projeto Renovação Casa Johnson está utilizando 30% mais horas que o estimado na fase de acabamento. Uma análise dos registros mostra que a equipe está enfrentando dificuldades com as novas técnicas de pintura texturizada.</p>
-                        <p><strong>Recomendação:</strong> Considere realizar um treinamento específico sobre técnicas de pintura texturizada para a equipe designada a este projeto. Isso pode reduzir o tempo de execução em até 25% e melhorar a qualidade do acabamento.</p>
-                    </div>
-                    <div class="suggestion-actions">
-                        <button class="btn btn-outline" onclick="implementRecommendation(1)">Implementar</button>
-                        <button class="btn btn-outline" style="opacity: 0.7;" onclick="dismissRecommendation(1)">Descartar</button>
-                    </div>
-                </div>
-
-                <div class="suggestion-card">
-                    <h3 class="suggestion-title">Alerta de Desvio de Cronograma</h3>
-                    <div class="suggestion-content">
-                        <p>O Projeto Reforma Comercial Plaza está atualmente 4 dias atrasado em relação ao cronograma previsto. Se o ritmo atual continuar, a data de entrega será comprometida em aproximadamente 10 dias.</p>
-                        <p><strong>Recomendação:</strong> Realoque temporariamente 2 funcionários da equipe do Projeto Residencial Parkview (que está 3 dias adiantado) para acelerar as atividades críticas do Projeto Plaza.</p>
-                    </div>
-                    <div class="suggestion-actions">
-                        <button class="btn btn-outline" onclick="implementRecommendation(2)">Implementar</button>
-                        <button class="btn btn-outline" style="opacity: 0.7;" onclick="dismissRecommendation(2)">Descartar</button>
-                    </div>
-                </div>
-
-                <div class="suggestion-card">
-                    <h3 class="suggestion-title">Oportunidade de Desenvolvimento de Equipe</h3>
-                    <div class="suggestion-content">
-                        <p>Análise dos últimos 3 meses mostra que 5 funcionários apresentam tempos consistentemente acima da média em atividades de instalação elétrica, impactando a eficiência geral dos projetos.</p>
-                        <p><strong>Recomendação:</strong> Organize um workshop de 4 horas sobre técnicas avançadas de instalação elétrica. O investimento estimado de $1,200 pode resultar em economia de aproximadamente $4,800 nos próximos 6 meses.</p>
-                    </div>
-                    <div class="suggestion-actions">
-                        <button class="btn btn-outline" onclick="implementRecommendation(3)">Implementar</button>
-                        <button class="btn btn-outline" style="opacity: 0.7;" onclick="dismissRecommendation(3)">Descartar</button>
-                    </div>
-                </div>
+             <div class="card">
+                <h2 class="card-title">Estatísticas Rápidas</h2>
+                <p>Simulação de estatísticas.</p>
             </div>
         </section>
+
+        <section id="reports-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Relatórios Detalhados</h2>
+                <p>Conteúdo da página de relatórios aqui...</p>
+                 <p>Filtros: Funcionário, Projeto, Período, Localização</p>
+                 <p>Gráficos de Barras</p>
+                 <button class="btn btn-outline">Exportar PDF</button>
+                 <button class="btn btn-outline">Exportar Excel</button>
+            </div>
+        </section>
+
+        <section id="geolocation-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Geolocalização</h2>
+                <p>Conteúdo da página de geolocalização aqui...</p>
+                <p>Mapa, Histórico, Cercas Virtuais</p>
+            </div>
+        </section>
+
+        <section id="projects-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Gestão de Projetos</h2>
+                <p>Conteúdo da página de gestão de projetos aqui...</p>
+                <p>Cadastro, Documentos, Materiais, Marcos, Equipe, Gantt</p>
+            </div>
+        </section>
+
+        <section id="notifications-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Notificações e Lembretes</h2>
+                <p>Conteúdo da página de notificações aqui...</p>
+            </div>
+        </section>
+        
+        <section id="user-registration-content" class="page-content" style="display: none;">
+             <div class="card">
+                 <h2 class="card-title">Cadastro de Novo Funcionário</h2>
+                 <form id="registration-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Nome Completo*</label>
+                        <input type="text" id="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email*</label>
+                        <input type="email" id="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Senha*</label>
+                        <input type="password" id="password" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hourly_rate" class="form-label">Valor por Hora (USD)*</label>
+                        <input type="number" id="hourly_rate" class="form-input" step="0.01" min="0" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar Funcionário</button>
+                </form>
+                <div id="message-area"></div>
+             </div>
+        </section>
+
     </main>
 
     <script>
+        // Corrigindo as aspas nos seletores e funções JavaScript
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('main-content');
         const pageTitleHeader = document.getElementById('page-title-header');
-        const chatMessages = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-input');
 
         function toggleSidebar() {
             sidebar.classList.toggle('collapsed');
@@ -651,6 +461,9 @@
         }
 
         function navigateTo(pageId) {
+            // Previne o comportamento padrão do link
+            event.preventDefault();
+            
             // Oculta todas as seções de conteúdo
             document.querySelectorAll('#main-content .page-content').forEach(section => {
                 section.style.display = 'none';
@@ -678,151 +491,76 @@
             if (window.innerWidth <= 768) {
                 sidebar.classList.remove('open');
             }
-            
-            // Previne o comportamento padrão do link
-            event.preventDefault();
         }
 
         function logout() {
+            // Em um sistema real, você invalidaria a sessão/token
             alert('Você foi desconectado (simulação).');
+            // Redireciona para uma página de login (simulada aqui)
+            // window.location.href = 'index.html'; 
+            // Como é standalone, apenas mostra um alerta
         }
         
-        function sendMessage() {
-            const message = userInput.value.trim();
-            if (message === '') return;
-            
-            // Adiciona a mensagem do usuário ao chat
-            addUserMessage(message);
-            
-            // Limpa o campo de entrada
-            userInput.value = '';
-            
-            // Simula resposta do assistente após um pequeno delay
-            setTimeout(() => {
-                const response = getAssistantResponse(message);
-                addAssistantMessage(response);
-            }, 1000);
-        }
-        
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
+        function handleRegister(event) {
+            event.preventDefault(); // Impede o envio padrão do formulário
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const hourlyRate = document.getElementById('hourly_rate').value;
+            const messageArea = document.getElementById('message-area');
+
+            // Limpa mensagens anteriores
+            messageArea.innerHTML = '';
+
+            // Validação simples (pode ser expandida)
+            if (!name || !email || !password || !hourlyRate) {
+                showMessage('Por favor, preencha todos os campos obrigatórios.', 'error');
+                return;
             }
-        }
-        
-        function addUserMessage(text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message message-user';
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = text;
-            
-            messageDiv.appendChild(contentDiv);
-            chatMessages.appendChild(messageDiv);
-            
-            // Rola para a mensagem mais recente
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        function addAssistantMessage(text) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message message-assistant';
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.innerHTML = text;
-            
-            messageDiv.appendChild(contentDiv);
-            chatMessages.appendChild(messageDiv);
-            
-            // Rola para a mensagem mais recente
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        function getAssistantResponse(message) {
-            // Respostas simuladas baseadas em palavras-chave na mensagem do usuário
-            const messageLower = message.toLowerCase();
-            
-            if (messageLower.includes('projeto') && messageLower.includes('johnson')) {
-                return `<p>O Projeto Renovação Casa Johnson está atualmente com as seguintes métricas:</p>
-                        <ul>
-                            <li>Progresso: 65% concluído (5% abaixo do planejado)</li>
-                            <li>Orçamento: 15% acima do previsto</li>
-                            <li>Cronograma: 3 dias de atraso</li>
-                        </ul>
-                        <p>A análise dos dados mostra que a fase de acabamento está consumindo mais horas que o estimado, principalmente devido a dificuldades com as novas técnicas de pintura texturizada.</p>
-                        <p>Recomendo:</p>
-                        <ol>
-                            <li>Realizar um treinamento rápido sobre técnicas de pintura texturizada</li>
-                            <li>Revisar as estimativas para as próximas etapas</li>
-                            <li>Considerar a alocação de um especialista em acabamento por 2 dias</li>
-                        </ol>`;
-            } else if (messageLower.includes('produtividade') && messageLower.includes('equipe')) {
-                return `<p>A produtividade geral da equipe nos últimos 30 dias está em 87%, um aumento de 5% em relação ao mês anterior.</p>
-                        <p>Destaques:</p>
-                        <ul>
-                            <li>Funcionários mais produtivos: Carlos Silva (96%), Maria Oliveira (94%), João Santos (92%)</li>
-                            <li>Áreas com melhor desempenho: Instalação de drywall, Pintura básica, Instalação de pisos</li>
-                            <li>Áreas com oportunidade de melhoria: Instalação elétrica, Acabamento fino, Pintura texturizada</li>
-                        </ul>
-                        <p>Recomendo focar em treinamentos específicos para as áreas de oportunidade identificadas, o que pode elevar a produtividade geral para mais de 90%.</p>`;
-            } else if (messageLower.includes('treinamento') || messageLower.includes('capacitação')) {
-                return `<p>Baseado na análise dos dados de desempenho dos últimos 3 meses, recomendo os seguintes treinamentos prioritários:</p>
-                        <ol>
-                            <li><strong>Técnicas avançadas de instalação elétrica</strong> - 5 funcionários apresentam tempos consistentemente acima da média nesta atividade</li>
-                            <li><strong>Acabamento fino e detalhes</strong> - Esta área representa 20% dos retrabalhos registrados</li>
-                            <li><strong>Técnicas de pintura texturizada</strong> - Impactando especialmente o Projeto Johnson</li>
-                        </ol>
-                        <p>O investimento estimado nestes treinamentos é de $3,600, com potencial retorno de $12,000 em economia de tempo e redução de retrabalho nos próximos 6 meses.</p>`;
-            } else if (messageLower.includes('recursos') || messageLower.includes('alocação')) {
-                return `<p>Atualmente, a distribuição de recursos entre os 8 projetos ativos não está otimizada. Identifiquei as seguintes oportunidades:</p>
-                        <ul>
-                            <li>O Projeto Residencial Parkview está 3 dias adiantado e tem 2 funcionários que poderiam ser realocados temporariamente</li>
-                            <li>O Projeto Reforma Comercial Plaza está 4 dias atrasado e precisa de reforço na equipe</li>
-                            <li>Há sobreposição de especialistas em acabamento em 3 projetos, enquanto faltam em 2 outros</li>
-                        </ul>
-                        <p>Recomendo uma redistribuição estratégica conforme detalhado no relatório de otimização que posso gerar para você.</p>`;
-            } else if (messageLower.includes('tendência') || messageLower.includes('previsão')) {
-                return `<p>Baseado nos dados históricos e nos projetos atuais, as tendências para os próximos 3 meses indicam:</p>
-                        <ul>
-                            <li>Aumento de 15% na demanda por serviços de renovação residencial</li>
-                            <li>Pico de atividade previsto para o início do próximo mês</li>
-                            <li>Possível escassez de mão de obra especializada em instalações elétricas</li>
-                            <li>Oportunidade de expansão no segmento de reformas comerciais de pequeno porte</li>
-                        </ul>
-                        <p>Recomendo iniciar o recrutamento de eletricistas adicionais e considerar parcerias estratégicas para atender à demanda crescente.</p>`;
-            } else {
-                return `<p>Entendi sua pergunta sobre "${message}". Para fornecer uma análise mais precisa, preciso de algumas informações adicionais:</p>
-                        <ul>
-                            <li>Qual período específico você gostaria de analisar?</li>
-                            <li>Está interessado em algum projeto ou funcionário específico?</li>
-                            <li>Há algum aspecto particular que gostaria de focar (produtividade, custos, qualidade)?</li>
-                        </ul>
-                        <p>Você também pode experimentar perguntas como:</p>
-                        <ul>
-                            <li>"Como está o desempenho do Projeto Johnson?"</li>
-                            <li>"Qual a produtividade da equipe este mês?"</li>
-                            <li>"Quais treinamentos são recomendados para minha equipe?"</li>
-                            <li>"Como otimizar a alocação de recursos nos projetos atuais?"</li>
-                        </ul>`;
-            }
-        }
-        
-        function implementRecommendation(id) {
-            alert(`Recomendação #${id} implementada com sucesso! (Simulação)`);
-            document.querySelectorAll('.suggestion-card')[id-1].style.opacity = '0.5';
-            document.querySelectorAll('.suggestion-card')[id-1].querySelector('.suggestion-actions').innerHTML = '<span style="color: var(--primary-gold); font-weight: 500;">✓ Implementado</span>';
-        }
-        
-        function dismissRecommendation(id) {
-            alert(`Recomendação #${id} descartada. (Simulação)`);
-            document.querySelectorAll('.suggestion-card')[id-1].style.display = 'none';
+
+            // Simulação de cadastro (sem backend real)
+            console.log('--- Dados do Novo Funcionário ---' + `\nNome: ${name}\nEmail: ${email}\nSenha: [oculta]\nValor/Hora: ${hourlyRate}\n---------------------------------`);
+
+            // Exibe mensagem de sucesso
+            showMessage(`Funcionário ${name} cadastrado com sucesso (simulação).`, 'success');
+
+            // Limpa o formulário
+            document.getElementById('registration-form').reset();
         }
 
-        // Inicializa a página no Assistente
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            // Limpa mensagens anteriores antes de adicionar a nova
+            messageArea.innerHTML = ''; 
+            messageArea.appendChild(alertDiv);
+
+            // Remove a mensagem após 5 segundos
+            setTimeout(() => {
+                // Verifica se o elemento ainda existe antes de remover
+                if (alertDiv.parentNode === messageArea) {
+                    messageArea.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        // Inicializa a página no Dashboard
         document.addEventListener('DOMContentLoaded', () => {
-            navigateTo('assistant');
+            // Inicializa a página no Dashboard
+            const dashboardContent = document.getElementById('dashboard-content');
+            if (dashboardContent) {
+                dashboardContent.style.display = 'block';
+                dashboardContent.classList.add('active');
+            }
+            
+            // Define o link do Dashboard como ativo
+            const dashboardLink = document.querySelector('.nav-link[onclick="navigateTo(\'dashboard\')"]');
+            if (dashboardLink) {
+                dashboardLink.classList.add('active');
+            }
         });
     </script>
 </body>
