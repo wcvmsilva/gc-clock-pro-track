@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GC Clock Pro Track - Dashboard (Standalone)</title>
+    <title>GC Clock Pro Track - Sistema Completo</title>
     <style>
         :root {
             --primary-dark: #0F1A20; /* Azul escuro */
@@ -90,6 +90,7 @@
             transition: background-color 0.2s ease;
             white-space: nowrap;
             overflow: hidden;
+            cursor: pointer;
         }
         
         .nav-link:hover, .nav-link.active {
@@ -258,6 +259,172 @@
              align-self: center;
         }
 
+        /* Estilos específicos para o assistente */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            min-height: 400px;
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+        }
+
+        .message {
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message-user {
+            justify-content: flex-end;
+        }
+
+        .message-assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
+        }
+
+        .message-user .message-content {
+            background-color: var(--primary-dark);
+            color: white;
+            border-top-right-radius: 0;
+        }
+
+        .message-assistant .message-content {
+            background-color: #f1f1f1;
+            color: var(--text-dark);
+            border-top-left-radius: 0;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            margin-right: var(--spacing-md);
+        }
+
+        .chat-input button {
+            background-color: var(--primary-gold);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .dashboard-card {
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .dashboard-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+
+        .dashboard-card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(198, 156, 109, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-gold);
+            font-size: 1.25rem;
+        }
+
+        .dashboard-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: var(--spacing-sm) 0;
+        }
+
+        .dashboard-card-description {
+            color: var(--text-light);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .assistant-suggestions {
+            margin-top: var(--spacing-xl);
+        }
+
+        .suggestion-card {
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border-left: 4px solid var(--primary-gold);
+        }
+
+        .suggestion-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 0 0 var(--spacing-sm);
+        }
+
+        .suggestion-content {
+            color: var(--text-dark);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
         @media (max-width: 768px) {
             #sidebar {
                 position: fixed;
@@ -287,6 +454,9 @@
                 cursor: pointer;
                 color: var(--primary-dark);
             }
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (min-width: 769px) {
@@ -310,44 +480,50 @@
         </div>
         <ul class="nav-menu">
             <li class="nav-item">
-                <a href="#dashboard" class="nav-link active" onclick="navigateTo(\'dashboard\')">
+                <a class="nav-link" onclick="showSection('dashboard')">
                     <span class="nav-icon">🏠</span>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#reports" class="nav-link" onclick="navigateTo(\'reports\')">
+                <a class="nav-link" onclick="showSection('reports')">
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">Relatórios</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#geolocation" class="nav-link" onclick="navigateTo(\'geolocation\')">
+                <a class="nav-link" onclick="showSection('geolocation')">
                     <span class="nav-icon">📍</span>
                     <span class="nav-text">Geolocalização</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#projects" class="nav-link" onclick="navigateTo(\'projects\')">
+                <a class="nav-link" onclick="showSection('projects')">
                     <span class="nav-icon">🏗️</span>
                     <span class="nav-text">Projetos</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#notifications" class="nav-link" onclick="navigateTo(\'notifications\')">
+                <a class="nav-link" onclick="showSection('notifications')">
                     <span class="nav-icon">🔔</span>
                     <span class="nav-text">Notificações</span>
                 </a>
             </li>
              <li class="nav-item">
-                <a href="#user-registration" class="nav-link" onclick="navigateTo(\'user-registration\')">
+                <a class="nav-link" onclick="showSection('user-registration')">
                     <span class="nav-icon">👤</span>
                     <span class="nav-text">Cadastrar Usuário</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('assistant')">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-text">Assistente IA</span>
+                </a>
+            </li>
         </ul>
         <div class="sidebar-footer">
-             <a href="#logout" class="nav-link" onclick="logout()">
+             <a class="nav-link" onclick="logout()">
                 <span class="nav-icon">🚪</span>
                 <span class="nav-text">Sair</span>
             </a>
@@ -360,12 +536,11 @@
             <h1 class="page-title" id="page-title-header">Dashboard</h1>
             <div class="user-menu">
                 <span class="user-name">Admin Demo</span>
-                <!-- Botão de Sair movido para o rodapé da sidebar -->
             </div>
         </header>
 
-        <!-- Conteúdo das Páginas (será carregado dinamicamente ou mostrado/ocultado) -->
-        <section id="dashboard-content" class="page-content active">
+        <!-- Conteúdo das Páginas -->
+        <section id="dashboard-content" class="page-content">
             <div class="card">
                 <h2 class="card-title">Registro de Ponto</h2>
                 <p>Simulação do botão de registro de ponto.</p>
@@ -437,113 +612,201 @@
              </div>
         </section>
 
+        <section id="assistant-content" class="page-content" style="display: none;">
+            <div class="card">
+                <h2 class="card-title">Assistente Inteligente</h2>
+                <p>Bem-vindo ao Assistente Inteligente do GC Clock Pro Track!</p>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message message-assistant">
+                            <div class="message-content">
+                                Olá! Sou o Assistente Inteligente do GC Clock Pro Track. Como posso ajudá-lo hoje?
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="user-input" placeholder="Digite sua pergunta aqui...">
+                        <button onclick="sendMessage()">Enviar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="assistant-suggestions">
+                <h3>Insights e Recomendações</h3>
+                
+                <div class="suggestion-card">
+                    <h4 class="suggestion-title">Otimização de Recursos</h4>
+                    <p class="suggestion-content">
+                        Baseado nos dados de horas trabalhadas, recomendo redistribuir a equipe no Projeto Johnson para melhorar a eficiência em 15%.
+                    </p>
+                    <div class="suggestion-actions">
+                        <button class="btn btn-outline">Implementar</button>
+                        <button class="btn btn-outline">Descartar</button>
+                    </div>
+                </div>
+                
+                <div class="suggestion-card">
+                    <h4 class="suggestion-title">Treinamento Recomendado</h4>
+                    <p class="suggestion-content">
+                        Identifiquei uma oportunidade de treinamento em técnicas avançadas de instalação para 3 membros da equipe.
+                    </p>
+                    <div class="suggestion-actions">
+                        <button class="btn btn-outline">Implementar</button>
+                        <button class="btn btn-outline">Descartar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script>
-        const sidebar = document.getElementById(\'sidebar\');
-        const mainContent = document.getElementById(\'main-content\');
-        const pageTitleHeader = document.getElementById(\'page-title-header\');
-
+        // Elementos DOM
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const pageTitleHeader = document.getElementById('page-title-header');
+        
+        // Função para alternar a barra lateral
         function toggleSidebar() {
-            sidebar.classList.toggle(\'collapsed\');
+            sidebar.classList.toggle('collapsed');
         }
         
-         function toggleSidebarMobile() {
-            sidebar.classList.toggle(\'open\');
+        // Função para alternar a barra lateral no mobile
+        function toggleSidebarMobile() {
+            sidebar.classList.toggle('open');
         }
 
-        function navigateTo(pageId) {
-            // Oculta todas as seções de conteúdo
-            document.querySelectorAll(\'#main-content .page-content\').forEach(section => {
-                section.style.display = \'none\';
-                section.classList.remove(\'active\');
+        // Função para mostrar uma seção específica
+        function showSection(sectionId) {
+            // Oculta todas as seções
+            document.querySelectorAll('.page-content').forEach(section => {
+                section.style.display = 'none';
             });
-
+            
             // Mostra a seção selecionada
-            const targetSection = document.getElementById(`${pageId}-content`);
-            if (targetSection) {
-                targetSection.style.display = \'block\';
-                targetSection.classList.add(\'active\');
-            }
+            document.getElementById(sectionId + '-content').style.display = 'block';
             
             // Atualiza o título da página
-            const linkText = document.querySelector(`.nav-link[onclick="navigateTo(\'${pageId}\')"] .nav-text`).textContent;
-             pageTitleHeader.textContent = linkText;
-
-            // Atualiza o link ativo na sidebar
-            document.querySelectorAll(\'#sidebar .nav-link\').forEach(link => {
-                link.classList.remove(\'active\');
+            const navLink = document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`);
+            const navText = navLink.querySelector('.nav-text').textContent;
+            pageTitleHeader.textContent = navText;
+            
+            // Atualiza o link ativo
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
             });
-            document.querySelector(`.nav-link[onclick="navigateTo(\'${pageId}\')"]`).classList.add(\'active\');
+            navLink.classList.add('active');
             
-            // Fecha a sidebar no mobile após clicar
+            // Fecha a sidebar no mobile
             if (window.innerWidth <= 768) {
-                 sidebar.classList.remove(\'open\');
+                sidebar.classList.remove('open');
             }
-            
-             // Previne o comportamento padrão do link (não necessário com onclick)
-             event.preventDefault();
         }
 
+        // Função de logout
         function logout() {
-            // Em um sistema real, você invalidaria a sessão/token
-            alert(\'Você foi desconectado (simulação).\');
-            // Redireciona para uma página de login (simulada aqui)
-            // window.location.href = \'index.html\'; 
-            // Como é standalone, apenas mostra um alerta
+            alert('Você foi desconectado (simulação).');
         }
         
-         function handleRegister(event) {
-            event.preventDefault(); // Impede o envio padrão do formulário
-
-            const name = document.getElementById(\'name\').value;
-            const email = document.getElementById(\'email\').value;
-            const password = document.getElementById(\'password\').value;
-            const hourlyRate = document.getElementById(\'hourly_rate\').value;
-            const messageArea = document.getElementById(\'message-area\');
-
-            // Limpa mensagens anteriores
-            messageArea.innerHTML = \'\';
-
-            // Validação simples (pode ser expandida)
+        // Função para lidar com o registro de usuários
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const hourlyRate = document.getElementById('hourly_rate').value;
+            
             if (!name || !email || !password || !hourlyRate) {
-                showMessage(\'Por favor, preencha todos os campos obrigatórios.\', \'error\');
+                showMessage('Por favor, preencha todos os campos obrigatórios.', 'error');
                 return;
             }
-
-            // Simulação de cadastro (sem backend real)
-            console.log(\'--- Dados do Novo Funcionário ---\' + `\nNome: ${name}\nEmail: ${email}\nSenha: [oculta]\nValor/Hora: ${hourlyRate}\n---------------------------------`);
-
-            // Exibe mensagem de sucesso
-            showMessage(`Funcionário ${name} cadastrado com sucesso (simulação).`, \'success\');
-
-            // Limpa o formulário
-            document.getElementById(\'registration-form\').reset();
+            
+            console.log('Novo funcionário registrado:', { name, email, hourlyRate });
+            showMessage(`Funcionário ${name} cadastrado com sucesso!`, 'success');
+            document.getElementById('registration-form').reset();
         }
-
+        
+        // Função para mostrar mensagens
         function showMessage(message, type) {
-            const messageArea = document.getElementById(\'message-area\');
-            const alertDiv = document.createElement(\'div\');
+            const messageArea = document.getElementById('message-area');
+            const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type}`;
             alertDiv.textContent = message;
-            // Limpa mensagens anteriores antes de adicionar a nova
-            messageArea.innerHTML = \'\'; 
+            
+            messageArea.innerHTML = '';
             messageArea.appendChild(alertDiv);
-
-            // Remove a mensagem após 5 segundos
+            
             setTimeout(() => {
-                // Verifica se o elemento ainda existe antes de remover
                 if (alertDiv.parentNode === messageArea) {
-                     messageArea.removeChild(alertDiv);
+                    messageArea.removeChild(alertDiv);
                 }
             }, 5000);
         }
-
-        // Inicializa a página no Dashboard
-        document.addEventListener(\'DOMContentLoaded\', () => {
-            navigateTo(\'dashboard\');
+        
+        // Função para enviar mensagem ao assistente
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const chatMessages = document.getElementById('chat-messages');
+            
+            if (!userInput.value.trim()) return;
+            
+            // Adiciona mensagem do usuário
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message message-user';
+            userMessage.innerHTML = `<div class="message-content">${userInput.value}</div>`;
+            chatMessages.appendChild(userMessage);
+            
+            // Simula resposta do assistente
+            setTimeout(() => {
+                const assistantMessage = document.createElement('div');
+                assistantMessage.className = 'message message-assistant';
+                
+                // Respostas simuladas baseadas em palavras-chave
+                let response = '';
+                const input = userInput.value.toLowerCase();
+                
+                if (input.includes('projeto') || input.includes('johnson')) {
+                    response = 'O Projeto Johnson está progredindo conforme o cronograma. A equipe atual tem 5 membros e o orçamento está 7% abaixo do planejado.';
+                } else if (input.includes('produtividade') || input.includes('equipe')) {
+                    response = 'A produtividade da equipe este mês aumentou 12% em comparação ao mês anterior. Recomendo reconhecer o desempenho da equipe de instalação.';
+                } else if (input.includes('treinamento')) {
+                    response = 'Baseado nos dados de desempenho, recomendo treinamentos em: 1) Técnicas avançadas de instalação, 2) Atendimento ao cliente, 3) Uso de novas ferramentas digitais.';
+                } else if (input.includes('recurso') || input.includes('otimizar')) {
+                    response = 'Para otimizar recursos, sugiro redistribuir a equipe entre os projetos atuais, priorizando o Projeto Davidson que está com prazo apertado.';
+                } else {
+                    response = 'Entendi sua solicitação. Posso ajudar com análises de projetos, produtividade da equipe, recomendações de treinamento e otimização de recursos. Por favor, especifique o que você precisa.';
+                }
+                
+                assistantMessage.innerHTML = `<div class="message-content">${response}</div>`;
+                chatMessages.appendChild(assistantMessage);
+                
+                // Rola para a mensagem mais recente
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000);
+            
+            // Limpa o input e rola para a mensagem mais recente
+            userInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Permite enviar mensagem com Enter
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
-
+        
+        // Inicializa a página no Dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('dashboard');
+            
+            // Adiciona evento de clique para links externos
+            document.querySelectorAll('a[href^="http"]').forEach(link => {
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer');
+            });
+        });
     </script>
 </body>
 </html>
