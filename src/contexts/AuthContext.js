@@ -1,71 +1,39 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-// Criando o contexto de autenticação
 const AuthContext = createContext(null);
-
-// Hook personalizado para usar o contexto de autenticação
 export const useAuth = () => useContext(AuthContext);
 
-// Provedor do contexto de autenticação
+const USERS = [
+  { id: 'wellington', name: 'Wellington Silva', email: 'wscolumbia25@gmail.com', password: 'gc2026admin', role: 'admin',    avatar: 'W' },
+  { id: 'moacir',     name: 'Moacir Santana',   email: 'moacir@gc.com',          password: 'moacir2026',  role: 'employee', avatar: 'M' },
+];
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificar se o usuário está autenticado ao carregar a página
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const stored = localStorage.getItem('gc_user');
+    if (stored) setUser(JSON.parse(stored));
     setLoading(false);
   }, []);
 
-  // Função de login
-  const login = (userData) => {
-    // Simulação de autenticação
-    // Em um ambiente real, isso seria uma chamada API
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Usuários de teste
-        const users = [
-          { id: 1, name: 'Admin', email: 'admin@example.com', password: 'admin123', role: 'admin' },
-          { id: 2, name: 'Carlos Silva', email: 'carlos@example.com', password: 'carlos123', role: 'employee' },
-          { id: 3, name: 'Maria Santos', email: 'maria@example.com', password: 'maria123', role: 'employee' }
-        ];
+  const login = (email, password) => new Promise((resolve, reject) => {
+    const found = USERS.find(u => u.email === email && u.password === password);
+    if (found) {
+      const { password: _, ...safe } = found;
+      localStorage.setItem('gc_user', JSON.stringify(safe));
+      setUser(safe);
+      resolve(safe);
+    } else {
+      reject(new Error('Email ou senha incorretos'));
+    }
+  });
 
-        const user = users.find(
-          u => u.email === userData.email && u.password === userData.password
-        );
-
-        if (user) {
-          // Remover a senha antes de armazenar
-          const { password, ...userWithoutPassword } = user;
-          localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-          setUser(userWithoutPassword);
-          resolve(userWithoutPassword);
-        } else {
-          reject(new Error('Credenciais inválidas'));
-        }
-      }, 500);
-    });
-  };
-
-  // Função de logout
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
-
-  // Valores fornecidos pelo contexto
-  const value = {
-    user,
-    login,
-    logout,
-    loading
-  };
+  const logout = () => { localStorage.removeItem('gc_user'); setUser(null); };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

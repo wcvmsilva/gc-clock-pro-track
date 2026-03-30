@@ -1,228 +1,72 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  Container,
-  Grid,
-  Link,
-  Checkbox,
-  FormControlLabel,
-  CircularProgress,
-  Alert,
-  Card,
-  CardMedia
-} from '@mui/material';
-import {
-  LockOutlined as LockIcon,
-  Person as PersonIcon
-} from '@mui/icons-material';
 
-const Login = () => {
+const C = { navy:'#0D1B2A', gold:'#C9A84C', gray:'#6B7280', lgray:'#F3F4F6', white:'#fff', red:'#DC2626' };
+
+export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
-  
-  // Estados
-  const [email, setEmail] = useState('');
+  const navigate  = useNavigate();
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  // Manipuladores de eventos
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-    if (error) setError('');
-  };
-  
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-    if (error) setError('');
-  };
-  
-  const handleRememberMeChange = (e) => {
-    setRememberMe(e.target.checked);
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validação básica
-    if (!email || !password) {
-      setError('Por favor, preencha todos os campos');
-      return;
-    }
-    
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      const user = await login({ email, password });
-      
-      // Redirecionar com base no tipo de usuário
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
-    } catch (error) {
-      setError('Credenciais inválidas. Por favor, tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Função para preencher credenciais de demonstração
-  const fillDemoCredentials = (userType) => {
-    if (userType === 'admin') {
-      setEmail('admin@example.com');
-      setPassword('admin123');
-    } else {
-      setEmail('carlos@example.com');
-      setPassword('carlos123');
-    }
-  };
-  
-  return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Card sx={{ width: '100%', mb: 4, borderRadius: 2, overflow: 'hidden' }}>
-          <CardMedia
-            component="img"
-            height="140"
-            image="https://via.placeholder.com/400x140/0F1A20/C69C6D?text=GC+Clock+Pro+Track"
-            alt="GC Clock Pro Track"
-          />
-        </Card>
-        
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            width: '100%',
-            borderRadius: 2,
-          }}
-        >
-          <Box sx={{ mb: 3, textAlign: 'center' }}>
-            <Typography component="h1" variant="h5">
-              Acesso ao Sistema
-            </Typography>
-          </Box>
-          
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={handleEmailChange}
-              InputProps={{
-                startAdornment: <PersonIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Senha"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={handlePasswordChange}
-              InputProps={{
-                startAdornment: <LockIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  value="remember" 
-                  color="primary" 
-                  checked={rememberMe}
-                  onChange={handleRememberMeChange}
-                />
-              }
-              label="Lembrar-me"
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-              disabled={isLoading}
-            >
-              {isLoading ? <CircularProgress size={24} /> : 'Entrar'}
-            </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href="#" variant="body2">
-                  Esqueceu sua senha?
-                </Link>
-              </Grid>
-            </Grid>
-          </Box>
-        </Paper>
-        
-        <Box sx={{ mt: 4, width: '100%' }}>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
-            Demonstração:
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <Button
-                fullWidth
-                variant="outlined"
-                size="small"
-                onClick={() => fillDemoCredentials('employee')}
-              >
-                Funcionário Demo
-              </Button>
-            </Grid>
-            <Grid item xs={6}>
-              <Button
-                fullWidth
-                variant="outlined"
-                size="small"
-                onClick={() => fillDemoCredentials('admin')}
-              >
-                Admin Demo
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
-      
-      <Box sx={{ mt: 8, mb: 4 }}>
-        <Typography variant="body2" color="text.secondary" align="center">
-          GC Clock Pro Track © {new Date().getFullYear()}
-        </Typography>
-      </Box>
-    </Container>
-  );
-};
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
 
-export default Login;
+  const handle = async (e) => {
+    e.preventDefault();
+    setError(''); setLoading(true);
+    try {
+      const user = await login(email, password);
+      navigate(user.role === 'admin' ? '/admin' : '/employee');
+    } catch(err) {
+      setError(err.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ minHeight:'100vh', background: C.navy, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Georgia,serif', padding:16 }}>
+      <div style={{ background: C.white, borderRadius:20, padding:'40px 32px', width:'100%', maxWidth:380, boxShadow:'0 20px 60px rgba(0,0,0,0.4)' }}>
+
+        {/* Logo */}
+        <div style={{ textAlign:'center', marginBottom:32 }}>
+          <div style={{ width:64, height:64, background:C.navy, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px', fontSize:28 }}>⏱</div>
+          <div style={{ fontSize:22, fontWeight:'bold', color:C.navy }}>GC Clock Pro Track</div>
+          <div style={{ fontSize:12, color:C.gray, marginTop:4 }}>GC Home Improvement LLC</div>
+        </div>
+
+        <form onSubmit={handle}>
+          <div style={{ marginBottom:16 }}>
+            <label style={{ fontSize:11, fontWeight:'bold', color:C.gray, letterSpacing:1, display:'block', marginBottom:6 }}>EMAIL</label>
+            <input
+              type="email" value={email} onChange={e=>setEmail(e.target.value)} required
+              style={{ width:'100%', border:`1.5px solid #E5E7EB`, borderRadius:8, padding:'11px 14px', fontSize:14, color:C.navy, fontFamily:'inherit', boxSizing:'border-box' }}
+              placeholder="seu@email.com"
+            />
+          </div>
+          <div style={{ marginBottom:24 }}>
+            <label style={{ fontSize:11, fontWeight:'bold', color:C.gray, letterSpacing:1, display:'block', marginBottom:6 }}>SENHA</label>
+            <input
+              type="password" value={password} onChange={e=>setPassword(e.target.value)} required
+              style={{ width:'100%', border:`1.5px solid #E5E7EB`, borderRadius:8, padding:'11px 14px', fontSize:14, color:C.navy, fontFamily:'inherit', boxSizing:'border-box' }}
+              placeholder="••••••••"
+            />
+          </div>
+
+          {error && <div style={{ background:'#FEF2F2', color:C.red, borderRadius:8, padding:'10px 14px', fontSize:13, marginBottom:16, border:'1px solid #FECACA' }}>{error}</div>}
+
+          <button type="submit" disabled={loading}
+            style={{ width:'100%', background: loading ? C.gray : C.navy, color:C.white, border:'none', borderRadius:10, padding:'13px', fontSize:15, fontWeight:'bold', cursor: loading ? 'not-allowed' : 'pointer', fontFamily:'inherit' }}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+
+        <div style={{ marginTop:24, background:C.lgray, borderRadius:10, padding:14, fontSize:11, color:C.gray }}>
+          <div style={{ fontWeight:'bold', marginBottom:6, color:C.navy }}>ACESSO DE TESTE:</div>
+          <div>👔 Admin: wscolumbia25@gmail.com / gc2026admin</div>
+          <div style={{ marginTop:4 }}>👷 Campo: moacir@gc.com / moacir2026</div>
+        </div>
+      </div>
+    </div>
+  );
+}
