@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase';
-import { collection, addDoc, query, where, orderBy, limit, getDocs, serverTimestamp } from 'firebase/firestore';
+import { db, storage } from '../firebase';
+import { collection, addDoc, updateDoc, setDoc, doc, getDoc, query, where, orderBy, limit, getDocs, serverTimestamp } from 'firebase/firestore';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import emailjs from '@emailjs/browser';
+
+const PROJECTS = [
+  { id:'PO-1466', label:'PO-1466 — Sea Island Builders', address:'1856 Thee Street, Sullivans Island' },
+  { id:'PO-1467', label:'PO-1467 — Projeto Novo',        address:'A definir' },
+];
 
 emailjs.init("JjwWbxdfvurMmHj19");
 
@@ -42,6 +48,9 @@ export default function EmployeeDashboard() {
   const [checkoutData, setCheckoutData] = useState(null);
   const [sending, setSending]   = useState(false);
   const [toast, setToast]       = useState(null);
+  const [selectedProject, setSelectedProject] = useState(PROJECTS[0]);
+  const [showProjectPicker, setShowProjectPicker] = useState(false);
+  const [firestoreDocId, setFirestoreDocId] = useState(null);
 
   const totalDone = ALL_IDS.filter(id=>checked[id]).length;
   const pct = Math.round(totalDone/ALL_IDS.length*100);
@@ -60,12 +69,54 @@ export default function EmployeeDashboard() {
     setTimeout(()=>setToast(null),4000);
   };
 
+  // Load saved progress from Firestore on login
+  useEffect(()=>{
+    if (!user?.id) return;
+    const obraKey = user.id + '_' + new Date().toISOString().split('T')[0];
+    getDoc(doc(db, 'obraProgress', obraKey)).then(snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.checklist && Object.keys(data.checklist).length > 0) {
+          setChecked(data.checklist);
+          showToast('📋 Progresso carregado!', 'success');
+        }
+        if (data.notes) setNotes(data.notes);
+        if (data.extras && data.extras.length > 0) setExtras(data.extras);
+        if (data.fuels && data.fuels.length > 0) setFuels(data.fuels);
+      }
+    }).catch(e => console.error('Load progress error:', e));
+  }, [user?.id]);
+
+
   // CHECK-IN
   const doCheckin = () => {
     const now = new Date();
-    getLocation(coords=>{
+    getLocation(async coords=>{
       const data = { time: now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}), date: now.toLocaleDateString('pt-BR'), coords };
       setCheckinData(data);
+      // Write checkin event to Firestore — triggers push to admin
+      try {
+        // Create Firestore record on check-in so dashboard sees it immediately
+        const docRef = await addDoc(collection(db,'timeRecords'),{
+          employeeId: user.id, employeeName: user.name,
+          checkin: data, checkout: null,
+          checklist: {}, notes: {}, extras: [], fuels: [],
+          project: selectedProject.label,
+          status: 'active',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        setFirestoreDocId(docRef.id);
+        // Notification event
+        await addDoc(collection(db,'notifications'),{
+          type: 'checkin',
+          employeeId: user.id, employeeName: user.name,
+          project: selectedProject.label,
+          time: data.time, date: data.date,
+          coords: coords || null,
+          read: false, createdAt: serverTimestamp(),
+        });
+      } catch(e){ console.error('Check-in Firestore error:', e); }
       showToast('✅ Check-in registrado!','success');
     });
   };
@@ -76,25 +127,64 @@ export default function EmployeeDashboard() {
     getLocation(async coords=>{
       const data = { time: now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}), date: now.toLocaleDateString('pt-BR'), coords };
       setCheckoutData(data);
-      // Save to Firestore
+      // Update Firestore record on checkout
       try {
-        await addDoc(collection(db,'timeRecords'),{
-          employeeId: user.id, employeeName: user.name,
-          checkin: checkinData, checkout: data,
-          checklist: checked, notes, extras, fuels,
-          project: 'PO-1466 — 1856 Thee Street',
-          createdAt: serverTimestamp(),
-        });
-      } catch(e){ console.error(e); }
+        if (firestoreDocId) {
+          await updateDoc(doc(db,'timeRecords', firestoreDocId),{
+            checkout: data, checklist: checked, notes, extras, fuels,
+            status: 'completed', updatedAt: serverTimestamp(),
+          });
+        } else {
+          // Fallback if no checkin doc (e.g. page was refreshed)
+          await addDoc(collection(db,'timeRecords'),{
+            employeeId: user.id, employeeName: user.name,
+            checkin: checkinData, checkout: data,
+            checklist: checked, notes, extras, fuels,
+            project: selectedProject.label, status: 'completed',
+            createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+          });
+        }
+      } catch(e){ console.error('Checkout Firestore error:', e); }
       // Send email
       await sendReport('eod', data);
       showToast('✅ Check-out registrado! Bom descanso!','success');
     });
   };
 
-  // SEND REPORT
+  // SEND REPORT — syncs obra data to Firestore independently of check-in/out
   const sendReport = async (type, coData=null) => {
     setSending(true);
+    // Sync obra data — works with or without check-in
+    try {
+      const { enableNetwork } = await import('firebase/firestore');
+      await enableNetwork(db);
+      const obraKey = user.id + '_' + new Date().toISOString().split('T')[0];
+      const obraRef = doc(db, 'obraProgress', obraKey);
+      const payload = {
+        employeeId: user.id,
+        employeeName: user.name,
+        project: selectedProject.label,
+        checklist: checked,
+        notes: notes,
+        extras: extras,
+        fuels: fuels,
+        pct: pct,
+        totalDone: totalDone,
+        lastProgressAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(obraRef, payload, { merge: true });
+      showToast('✅ Sincronizado com dashboard!', 'success');
+      if (firestoreDocId) {
+        await updateDoc(doc(db,'timeRecords', firestoreDocId),{
+          checklist: checked, notes, extras, fuels,
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch(e){
+      console.error('Progress sync error:', e);
+      showToast('ERRO Firestore: ' + e.message, 'red');
+    }
     const now = new Date().toLocaleString('pt-BR',{timeZone:'America/New_York'});
     const label = type==='progress' ? 'PROGRESSO' : 'FIM DE DIA';
     let lines = [`📋 RELATÓRIO ${label} — PO-1466`,`🏠 1856 Thee Street, Sullivans Island`,`⏰ ${now}`,`📊 Progresso: ${pct}% (${totalDone}/${ALL_IDS.length} itens)`,``];
@@ -121,10 +211,28 @@ export default function EmployeeDashboard() {
   };
 
   // FUEL
-  const addFuel = () => { setFuels(p=>[...p,{id:fuelCounter,odoBefore:'',odoAfter:'',gallons:'',pricePerGal:'',project:'PO-1466',date:new Date().toISOString().split('T')[0],photo:null}]); setFuelCounter(c=>c+1); };
+  const addFuel = () => { setFuels(p=>[...p,{id:fuelCounter,odoBefore:'',odoAfter:'',gallons:'',pricePerGal:'',project:selectedProject.id,date:new Date().toISOString().split('T')[0],photo:null}]); setFuelCounter(c=>c+1); };
   const removeFuel = id => setFuels(p=>p.filter(f=>f.id!==id));
   const updateFuel = (id,field,val) => setFuels(p=>p.map(f=>f.id===id?{...f,[field]:val}:f));
-  const handleFuelPhoto = (id,file) => { const r=new FileReader(); r.onload=e=>updateFuel(id,'photo',e.target.result); r.readAsDataURL(file); };
+  const handleFuelPhoto = async (id, file) => {
+    if (!file) return;
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onload = e => updateFuel(id, 'photoPreview', e.target.result);
+    reader.readAsDataURL(file);
+    // Upload to Firebase Storage
+    try {
+      const ts = Date.now();
+      const path = `fuel-photos/${user.id}/${ts}_${file.name}`;
+      const snap = await uploadBytes(storageRef(storage, path), file);
+      const url  = await getDownloadURL(snap.ref);
+      updateFuel(id, 'photo', url);
+      updateFuel(id, 'photoTimestamp', new Date().toISOString());
+      showToast('📸 Foto salva!', 'success');
+    } catch(e) {
+      showToast('Foto salva localmente', 'amber');
+    }
+  };
 
   const totalFuelCost = fuels.reduce((s,f)=>s+(parseFloat(f.gallons)||0)*(parseFloat(f.pricePerGal)||0),0);
   const totalFuelMiles= fuels.reduce((s,f)=>s+Math.max(0,(parseFloat(f.odoAfter)||0)-(parseFloat(f.odoBefore)||0)),0);
@@ -223,6 +331,54 @@ export default function EmployeeDashboard() {
               </div>
             </div>
             <div style={{padding:'16px'}}>
+
+              {/* PROJECT SELECTOR */}
+              {!checkinData && (
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:11, color:C.gray, fontWeight:'bold', marginBottom:6}}>PROJETO / JOB</div>
+                  <div style={{position:'relative'}}>
+                    <button onClick={()=>setShowProjectPicker(p=>!p)} style={{
+                      width:'100%', border:`2px solid ${C.purple}`, borderRadius:10, padding:'12px 14px',
+                      background:'#F5F3FF', color:C.purple, fontWeight:'bold', fontSize:13,
+                      cursor:'pointer', fontFamily:'inherit', textAlign:'left', display:'flex',
+                      justifyContent:'space-between', alignItems:'center'
+                    }}>
+                      <span>📌 {selectedProject.label}</span>
+                      <span style={{fontSize:10}}>{showProjectPicker?'▲':'▼'}</span>
+                    </button>
+                    {showProjectPicker && (
+                      <div style={{
+                        position:'absolute', top:'calc(100% + 4px)', left:0, right:0,
+                        background:C.white, border:`1px solid ${C.border}`, borderRadius:10,
+                        boxShadow:'0 4px 16px rgba(0,0,0,0.12)', zIndex:50, overflow:'hidden'
+                      }}>
+                        {PROJECTS.map(p=>(
+                          <div key={p.id} onClick={()=>{setSelectedProject(p);setShowProjectPicker(false);}} style={{
+                            padding:'12px 14px', cursor:'pointer',
+                            background:selectedProject.id===p.id?'#F5F3FF':C.white,
+                            borderBottom:`1px solid ${C.border}`
+                          }}>
+                            <div style={{fontWeight:'bold', color:C.navy, fontSize:13}}>📌 {p.id}</div>
+                            <div style={{fontSize:11, color:C.gray, marginTop:2}}>{p.address}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{fontSize:10, color:C.gray, marginTop:5}}>📍 {selectedProject.address}</div>
+                </div>
+              )}
+
+              {checkinData && (
+                <div style={{background:'#EDE9FE', borderRadius:8, padding:'8px 12px', marginBottom:12, display:'flex', alignItems:'center', gap:8}}>
+                  <span style={{fontSize:14}}>📌</span>
+                  <div>
+                    <div style={{fontSize:11, color:C.purple, fontWeight:'bold'}}>{selectedProject.label}</div>
+                    <div style={{fontSize:10, color:'#7C3AED'}}>{selectedProject.address}</div>
+                  </div>
+                </div>
+              )}
+
               {/* Check-in status */}
               <div style={{background:'#F0FDF4', borderRadius:10, padding:12, marginBottom:12, border:`1px solid #BBF7D0`, textAlign:'center'}}>
                 <div style={{fontSize:11, color:C.gray, marginBottom:4}}>CHECK-IN</div>
@@ -321,8 +477,16 @@ export default function EmployeeDashboard() {
                       <div style={{display:'flex',justifyContent:'space-between',borderTop:'1px solid rgba(255,255,255,0.2)',paddingTop:4,marginTop:2,fontWeight:'bold'}}><span>💰 Custo total</span><span>${cost.toFixed(2)}</span></div>
                     </div>}
                     <input type="file" accept="image/*" capture="environment" id={`photo-${f.id}`} style={{display:'none'}} onChange={e=>handleFuelPhoto(f.id,e.target.files[0])}/>
-                    <button onClick={()=>document.getElementById(`photo-${f.id}`).click()} style={{width:'100%',border:`2px dashed ${C.blue}`,background:'none',borderRadius:8,padding:10,color:C.blue,fontWeight:'bold',fontSize:13,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                      {f.photo ? '📸 Foto registrada ✓' : '📸 Tirar Foto da Bomba'}
+                    {(f.photoPreview||f.photo) && (
+                      <div style={{marginBottom:8,borderRadius:8,overflow:'hidden',border:`2px solid ${C.green}`}}>
+                        <img src={f.photoPreview||f.photo} alt="bomba" style={{width:'100%',maxHeight:160,objectFit:'cover',display:'block'}}/>
+                        <div style={{padding:'4px 8px',background:f.photo?'#DCFCE7':'#FFF7ED',fontSize:10,color:f.photo?C.green:C.amber,fontWeight:'bold'}}>
+                          {f.photo ? `✓ Salvo — ${f.photoTimestamp ? new Date(f.photoTimestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}` : '⏳ Fazendo upload...'}
+                        </div>
+                      </div>
+                    )}
+                    <button onClick={()=>document.getElementById(`photo-${f.id}`).click()} style={{width:'100%',border:`2px dashed ${f.photo?C.green:C.blue}`,background:'none',borderRadius:8,padding:10,color:f.photo?C.green:C.blue,fontWeight:'bold',fontSize:13,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                      {f.photo ? '📸 Foto salva no Firebase ✓' : f.photoPreview ? '⏳ Salvando...' : '📸 Tirar Foto da Bomba'}
                     </button>
                     {f.photo && <img src={f.photo} alt="bomba" style={{width:'100%',borderRadius:8,marginTop:8,maxHeight:160,objectFit:'cover'}}/>}
                   </div>

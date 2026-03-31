@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, where, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where, updateDoc, doc } from 'firebase/firestore';
 
 const C = { navy:'#0D1B2A', gold:'#C9A84C', amber:'#D97706', green:'#15803D', red:'#DC2626', gray:'#6B7280', lgray:'#F3F4F6', border:'#E5E7EB', white:'#fff', blue:'#1D4ED8', purple:'#7C3AED' };
 
@@ -11,6 +11,28 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
   const [tab, setTab] = useState('hoje');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [obraProgress, setObraProgress] = useState([]);
+
+
+  // Listen for new check-in notifications
+  useEffect(()=>{
+    const q = query(collection(db,'notifications'), orderBy('createdAt','desc'), limit(20));
+    const unsub = onSnapshot(q, snap=>{
+      setNotifications(snap.docs.map(d=>({id:d.id,...d.data()})));
+    });
+    return ()=>unsub();
+  },[]);
+
+  // Listen for obra progress updates (independent of check-in)
+  useEffect(()=>{
+    const q = query(collection(db,'obraProgress'), orderBy('updatedAt','desc'), limit(20));
+    const unsub = onSnapshot(q, snap=>{
+      setObraProgress(snap.docs.map(d=>({id:d.id,...d.data()})));
+    });
+    return ()=>unsub();
+  },[]);
 
   useEffect(()=>{
     const start = new Date(); start.setHours(0,0,0,0);
@@ -54,25 +76,86 @@ export default function AdminDashboard() {
             <div style={{color:C.white, fontSize:18, fontWeight:'bold'}}>⏱ GC Clock Pro Track</div>
             <div style={{color:'#94A3B8', fontSize:11}}>👔 {user?.name} — Admin</div>
           </div>
-          <div style={{textAlign:'right'}}>
-            <div style={{color:C.gold, fontSize:22, fontWeight:'bold'}}>{todayRecords.length}</div>
-            <div style={{color:'#94A3B8', fontSize:10}}>registros hoje</div>
-            <button onClick={()=>{logout();navigate('/login');}} style={{background:'none',border:'none',color:'#94A3B8',fontSize:11,cursor:'pointer',marginTop:2}}>Sair</button>
+          <div style={{textAlign:'right', display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4}}>
+            <div style={{display:'flex', alignItems:'center', gap:10}}>
+              {/* NOTIFICATION BELL */}
+              <button onClick={()=>setShowNotifPanel(p=>!p)} style={{
+                position:'relative', background:'none', border:'none',
+                cursor:'pointer', padding:4, color:C.white, fontSize:20
+              }}>
+                🔔
+                {notifications.filter(n=>!n.read).length > 0 && (
+                  <span style={{
+                    position:'absolute', top:0, right:0,
+                    background:C.red, color:'#fff', borderRadius:'50%',
+                    width:16, height:16, fontSize:9, fontWeight:'bold',
+                    display:'flex', alignItems:'center', justifyContent:'center'
+                  }}>{notifications.filter(n=>!n.read).length}</span>
+                )}
+              </button>
+              <div>
+                <div style={{color:C.gold, fontSize:22, fontWeight:'bold'}}>{todayRecords.length}</div>
+                <div style={{color:'#94A3B8', fontSize:10}}>registros hoje</div>
+              </div>
+            </div>
+            <div style={{display:'flex', gap:8, alignItems:'center'}}>
+              <button onClick={()=>{logout();navigate('/login');}} style={{background:'none',border:'none',color:'#94A3B8',fontSize:11,cursor:'pointer'}}>Sair</button>
+            </div>
           </div>
         </div>
         <div style={{display:'flex', borderBottom:`1px solid rgba(255,255,255,0.1)`}}>
           {[['hoje','📅 Hoje'],['equipe','👷 Equipe'],['relatorios','📊 Relatórios'],['mapa','🗺️ Mapa']].map(([t,l])=>(
-            <button key={t} style={tabStyle(t)} onClick={()=>{ if(t==='mapa'){navigate('/admin/map');}else{setTab(t);}}}>{l}</button>
+            <button key={t} style={tabStyle(t)} onClick={()=>{ if(t==='mapa'){navigate('/admin/map');} else if(t==='relatorios'){navigate('/admin/reports');} else{setTab(t);}}}>{l}</button>
           ))}
         </div>
       </div>
 
       <div style={{padding:'12px 12px 0'}}>
 
+        {/* ── NOTIFICATION PANEL ── */}
+        {showNotifPanel && (
+          <div style={{background:C.white,borderRadius:12,marginBottom:12,border:`1px solid ${C.border}`,overflow:'hidden',boxShadow:'0 4px 16px rgba(0,0,0,0.12)'}}>
+            <div style={{padding:'10px 14px',borderBottom:`1px solid ${C.border}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{fontWeight:'bold',color:C.navy,fontSize:13}}>🔔 Notificações</div>
+              <button onClick={()=>setShowNotifPanel(false)} style={{background:'none',border:'none',color:C.gray,fontSize:16,cursor:'pointer'}}>✕</button>
+            </div>
+            {notifications.length===0 && (
+              <div style={{padding:20,textAlign:'center',color:C.gray,fontSize:13}}>Nenhuma notificação ainda.</div>
+            )}
+            {notifications.map(n=>{
+              const isNew = !n.read;
+              return (
+                <div key={n.id} style={{
+                  padding:'12px 14px',borderBottom:`1px solid ${C.border}`,
+                  background:isNew?'#F5F3FF':C.white,
+                  borderLeft:isNew?`4px solid ${C.purple}`:'4px solid transparent'
+                }}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                    <div>
+                      <div style={{fontWeight:'bold',color:C.navy,fontSize:13}}>
+                        {n.type==='checkin'?'🟢':'🔴'} {n.employeeName}
+                        <span style={{fontSize:10,color:C.gray,fontWeight:'normal',marginLeft:6}}>
+                          {n.type==='checkin'?'fez check-in':'fez check-out'}
+                        </span>
+                      </div>
+                      <div style={{fontSize:11,color:C.teal,marginTop:2}}>📌 {n.project}</div>
+                      <div style={{fontSize:11,color:C.gray,marginTop:2}}>
+                        {n.date} às {n.time}
+                        {n.coords && ` · 📍 ${parseFloat(n.coords.lat).toFixed(4)}, ${parseFloat(n.coords.lng).toFixed(4)}`}
+                      </div>
+                    </div>
+                    {isNew && <span style={{background:'#7C3AED',color:'#fff',borderRadius:12,padding:'2px 8px',fontSize:9,fontWeight:'bold'}}>NOVO</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* ── STATS CARDS ── */}
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10}}>
           {[
-            { icon:'👷', label:'Ativos hoje', val: todayRecords.length, color: C.green },
+            { icon:'👷', label:'Ativos hoje', val: todayRecords.filter(r=>r.checkin&&!r.checkout).length, color: C.green },
             { icon:'⏱', label:'Horas extras', val: `${totalExtrasHours}h`, color: C.amber },
             { icon:'⛽', label:'Combustível', val: `$${totalFuelCost.toFixed(0)}`, color: C.blue },
             { icon:'📋', label:'Total registros', val: records.length, color: C.purple },
@@ -89,7 +172,58 @@ export default function AdminDashboard() {
         {tab==='hoje' && (
           <div>
             <div style={{fontSize:11, color:C.gray, fontWeight:'bold', letterSpacing:1, marginBottom:8}}>ATIVIDADE DE HOJE</div>
-            {todayRecords.length===0 && <div style={{background:C.white, borderRadius:12, padding:24, textAlign:'center', color:C.gray, border:`1px solid ${C.border}`}}>Nenhum registro hoje ainda.</div>}
+            {/* OBRA PROGRESS — independent of check-in */}
+            {obraProgress.length > 0 && (
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:11, color:C.purple, fontWeight:'bold', letterSpacing:1, marginBottom:8}}>📋 PROGRESSO DA OBRA — ATUALIZAÇÃO EM TEMPO REAL</div>
+                {obraProgress.map(r=>{
+                  const done = Object.values(r.checklist||{}).filter(Boolean).length;
+                  const total = Object.values(r.checklist||{}).length || 19;
+                  const pct = Math.round(done/total*100);
+                  const extrasFiltered = (r.extras||[]).filter(e=>e.desc?.trim());
+                  const fuelCost = (r.fuels||[]).reduce((s,f)=>s+(parseFloat(f.gallons)||0)*(parseFloat(f.pricePerGal)||0),0);
+                  return (
+                    <div key={r.id} style={{background:C.white, borderRadius:12, padding:14, marginBottom:8, border:`2px solid ${C.purple}20`, boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10}}>
+                        <div>
+                          <div style={{fontWeight:'bold', color:C.navy, fontSize:14}}>👷 {r.employeeName}</div>
+                          <div style={{fontSize:11, color:C.teal, marginTop:1}}>📌 {r.project}</div>
+                        </div>
+                        <span style={{background:'#EDE9FE', color:C.purple, borderRadius:12, padding:'2px 10px', fontSize:10, fontWeight:'bold'}}>
+                          Atualizado sem ponto
+                        </span>
+                      </div>
+                      {/* Checklist bar */}
+                      <div style={{marginBottom:8}}>
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:4}}>
+                          <span style={{fontSize:10, color:C.gray, fontWeight:'bold'}}>CHECKLIST</span>
+                          <span style={{fontSize:11, fontWeight:'bold', color: pct===100?C.green:C.amber}}>{pct}% — {done}/{total}</span>
+                        </div>
+                        <div style={{background:C.lgray, borderRadius:4, height:8, overflow:'hidden'}}>
+                          <div style={{height:'100%', background: pct===100?C.green:C.gold, width:`${pct}%`, borderRadius:4, transition:'width 0.4s'}}/>
+                        </div>
+                      </div>
+                      {/* Extras + Fuel summary */}
+                      <div style={{display:'flex', gap:6}}>
+                        {extrasFiltered.length > 0 && (
+                          <div style={{flex:1, background:'#FFF7ED', borderRadius:8, padding:'6px 10px', fontSize:11, color:C.amber}}>
+                            ⚠️ {extrasFiltered.length} extra(s)
+                          </div>
+                        )}
+                        {fuelCost > 0 && (
+                          <div style={{flex:1, background:'#EFF6FF', borderRadius:8, padding:'6px 10px', fontSize:11, color:C.blue}}>
+                            ⛽ ${fuelCost.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div style={{fontSize:11, color:C.gray, fontWeight:'bold', letterSpacing:1, marginBottom:8}}>⏱ PONTO DE HOJE</div>
+            {todayRecords.length===0 && <div style={{background:C.white, borderRadius:12, padding:24, textAlign:'center', color:C.gray, border:`1px solid ${C.border}`}}>Nenhum registro de ponto hoje ainda.</div>}
             {todayRecords.map(r=>(
               <div key={r.id} style={{background:C.white, borderRadius:12, padding:16, marginBottom:10, border:`1px solid ${C.border}`, boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10}}>
